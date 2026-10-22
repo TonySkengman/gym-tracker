@@ -9,5 +9,5 @@ async function request(path = '', options = {}) {
   return response.status === 204 ? null : response.json();
 }
 export const getPlans = () => request();
-export const savePlan = (plan) => request(plan.id ? `/${plan.id}` : '', { method: plan.id ? 'PUT' : 'POST', body: JSON.stringify({ name: plan.name, description: plan.description, exercises: plan.exercises.map(({ name, targetSets, targetReps }) => ({ name, targetSets: Number(targetSets), targetReps: Number(targetReps) })) }) });
+export const savePlan = (plan) => request(plan.id ? `/${plan.id}` : '', { method: plan.id ? 'PUT' : 'POST', body: JSON.stringify({ name: plan.name, description: plan.description, exercises: plan.exercises.map(({ name, targetSets, targetReps, exerciseId }) => ({ name, exerciseId, targetSets: Number(targetSets), targetReps: Number(targetReps) })) }) });
 export const deletePlan = (id) => request(`/${id}`, { method: 'DELETE' });

@@ -60,3 +60,29 @@ test('blank weight is not silently converted to a completed bodyweight set', asy
   draft.exercises[0].sets[0].reps = '8';
   await assert.rejects(completeWorkout(draft), /Enter weight and reps/);
 });
+
+test('skip serialization omits draft values and rejects an entirely skipped workout', async () => {
+  const { workoutPayload } = await import('./workouts.js');
+  const draft = createWorkoutDraft({ id: 1, name: 'Upper', exercises: [{ name: 'Press', exerciseId: 7, targetSets: 2, targetReps: 8 }, { name: 'Row', exerciseId: 8, targetSets: 1, targetReps: 10 }] });
+  draft.exercises[0].skipped = true;
+  draft.exercises[1].sets[0] = { weight: '20', reps: '10' };
+  const body = workoutPayload(draft);
+  assert.equal(body.exercises[0].exerciseId, 7);
+  assert.deepEqual(body.exercises[0].sets, []);
+  assert.deepEqual(body.exercises[1].sets, [{ weight: 20, reps: 10 }]);
+  draft.exercises[1].skipped = true;
+  assert.throws(() => workoutPayload(draft), /at least one exercise/);
+});
+test('history editing reconstructs skipped exercises and sends PUT; deletion accepts 204', async () => {
+  const { workoutToDraft, updateWorkout, deleteWorkout } = await import('./workouts.js');
+  const saved = { id: 'session-1', planId: 1, planName: 'Upper', startedAt: '2026-01-01T00:00:00Z', sets: [{ exerciseName: 'Row', exerciseId: 8, exerciseNumber: 2, setNumber: 1, targetReps: 10, weight: 20, reps: 8 }], skippedExercises: [{ exerciseName: 'Press', exerciseId: 7, exerciseNumber: 1, targetReps: 8 }] };
+  const draft = workoutToDraft(saved);
+  assert.equal(draft.exercises[0].skipped, true);
+  assert.equal(draft.exercises[1].sets[0].weight, '20');
+  const original = globalThis.fetch; const calls = [];
+  try {
+    globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => saved }; };
+    await updateWorkout(draft); assert.equal(calls[0].method, 'PUT'); assert.equal(calls[0].url, '/api/workouts/session-1');
+    assert.equal(await deleteWorkout(saved.id), null); assert.equal(calls[1].method, 'DELETE');
+  } finally { globalThis.fetch = original; }
+});

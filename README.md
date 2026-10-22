@@ -1,11 +1,11 @@
 # Form — Gym Tracker
 
-A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. Progress charts remain a future milestone.
+A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. The Progress page charts heaviest weight and training volume for each exercise.
 
 ## Stack
 
 - React + Vite, JavaScript, Tailwind CSS, Lucide icons
-- Recharts installed for the future progress milestone
+- Recharts for exercise progress charts
 - Java 21, Spring Boot 4.1.1, Maven, Spring Data JPA, Bean Validation
 - PostgreSQL 17 via Docker Compose
 
@@ -36,7 +36,7 @@ npm ci --cache .cache/npm
 npm run dev
 ```
 
-After pulling backend changes, stop the old backend process with Ctrl+C and start it again; it does not reload Java changes automatically. Hibernate creates the new session tables without removing existing plans.
+After pulling backend changes, stop the old backend process with Ctrl+C and start it again; it does not reload Java changes automatically. Hibernate adds the new tables and nullable exercise identity columns without removing existing plans. The startup catalog importer links older records by normalized name and preserves their recorded names. Do not delete the database volume.
 
 Open http://localhost:5173. The API runs at http://localhost:8080/api/plans. Vite proxies `/api` to the backend, so no CORS configuration is needed in development. The first page load should show an empty plan list. Click **New plan**, add exercises, save, and refresh to check database persistence.
 
@@ -45,13 +45,35 @@ The standard Apache Maven Wrapper is included for macOS/Linux (`mvnw`) and Windo
 ## Log a workout
 
 1. Click **Start workout** on a saved plan.
-2. Enter weight in kilograms and actual reps for every planned set. Use `0` kg for bodyweight/no added weight. All sets require entries; skipping or adding sets is reserved for a later improvement.
+2. Enter weight in kilograms and actual reps for each performed set. Use `0` kg for bodyweight/no added weight. Use **Add set** or the trash button to adjust the set count (1–50 per exercise). Removing a filled set asks for confirmation. Use **Skip exercise** when an exercise was not performed; no fake values are required. At least one exercise with a recorded set is required to finish.
 3. Click **Finish workout**. After the server confirms the save, the app opens **History**.
 4. Expand a completed session to see its exercises, weights and reps. The dashboard completed-workout count updates too.
 
 You can minimize the workout and navigate elsewhere. **Resume workout** returns to the same session. An unfinished workout is stored in this browser's local storage and survives refreshes; it is not synced to the server or other devices. Private browsing or clearing browser data can remove drafts. Completed workouts are stored in the database. **Discard workout** asks before clearing a draft.
 
-Saved sessions contain a snapshot of the plan and sets. Editing or deleting the original plan leaves history intact. A stable session UUID makes sequential retries return the original saved workout rather than add a duplicate. History is read-only in this milestone; session editing and deletion are not yet implemented.
+Saved sessions contain a snapshot of the plan and sets. Editing or deleting the original plan leaves history intact. A stable session UUID makes sequential retries return the original saved workout rather than add a duplicate. In **History**, the pencil button opens the session editor so you can correct weights/reps, change the set count or mark an exercise skipped. Saving updates Progress immediately while preserving the original workout date and duration. The trash button asks for confirmation before deleting the session and its recorded/skipped exercise rows; Progress and completed-workout totals update too. Unsaved history edits are not stored in the browser draft.
+
+## Exercise catalog
+
+Open **Exercises** to search the shared catalog or add a custom exercise. Common exercises are seeded on first startup. Names are unique ignoring capitalization and repeated spaces; duplicates return a helpful error. Plans now use an exercise picker, with an inline **Create custom exercise** action for movements not already listed.
+
+Plans, recorded sets and skipped exercises carry stable catalog IDs. On startup, the importer adds IDs to old plans and recorded sets by matching normalized names without changing historical names or recorded values. Re-running the importer does not create duplicate entries. Different spellings such as `Dumbell press` and `Dumbbell press` remain separate; the importer does not make uncertain guesses. The catalog currently supports browsing and adding exercises, not renaming, merging or deletion.
+
+Skipped exercises are stored in a separate collection, with no weight/reps placeholders. They appear as **Skipped** in History and do not create zero-volume chart points. A pending draft keeps its unsent inputs when toggling skip off again; once a session is saved, skipped exercise values are intentionally absent. Unskipping a previously saved skipped exercise starts with one blank set.
+
+## View exercise progress
+
+Open **Progress** and select an exercise. The page uses completed sessions from the existing workout API; no additional backend endpoint or dependency installation is required.
+
+- **Heaviest weight:** maximum recorded set weight for that exercise in each session.
+- **Training volume:** sum of recorded weight × actual reps for that exercise in each session.
+- **Summary:** matching session count, best set weight and total volume for the selected date range.
+- **Date filters:** From and To include the full local calendar day; leave either blank for an open-ended range. **All dates** clears both date filters.
+- **Session data:** expandable table with the underlying chart values for accessibility and checking calculations.
+
+Every session remains a separate chart point, including multiple sessions on the same day. One session shows a single point and a prompt to log another session. Planned exercises with no logged sessions show an empty state. Progress uses catalog IDs across plans, so historical snapshot names do not change the exercise grouping. Legacy records without IDs fall back to normalized names until the startup importer has run. Bodyweight sets recorded at 0 kg contribute 0 to volume because body mass is not recorded.
+
+The charts load only when opening Progress to keep the dashboard bundle smaller. The charts themselves use the existing workout API. The catalog and editable-history milestone adds backend endpoints, so restart the backend after updating.
 
 ## Configuration
 
@@ -134,6 +156,8 @@ Names are required (100 characters maximum), descriptions allow 500 characters, 
 | --- | --- | --- |
 | GET | `/api/workouts` | Completed sessions, newest first |
 | GET | `/api/workouts/{uuid}` | One saved session, or 404 |
+| PUT | `/api/workouts/{uuid}` | Replace recorded/skipped exercises; preserve original timestamps |
+| DELETE | `/api/workouts/{uuid}` | Delete a session and its dependent rows; 204 or 404 |
 | POST | `/api/workouts` | Complete a session; 201 for a new UUID, 200 for a previously saved UUID |
 
 Example completion payload (use a new UUID for each workout):
@@ -153,7 +177,16 @@ Example completion payload (use a new UUID for each workout):
 }
 ```
 
-Completion time is set on the server. Weight allows 0–2000 kg and up to two decimal places; actual reps must be integers from 1–100. Exercise names and targets are stored as a snapshot, with no foreign-key dependency on the source plan. Responses include an ordered flat list of sets with exercise and set numbers; repeated exercise names remain separate groups in History.
+Completion time is set on the server on creation and preserved on updates. The body UUID must match the URL for PUT. Weight allows 0–2000 kg and up to two decimal places; actual reps must be integers from 1–100. Exercise names and targets are stored as a snapshot, with no foreign-key dependency on the source plan. Responses include an ordered flat list of recorded sets with exercise IDs and exercise/set numbers, plus a separate `skippedExercises` array. Repeated exercise occurrences remain separate in History. For a skipped exercise, send `skipped: true` and `sets: []`; performed exercises require at least one set. The server rejects sessions where everything is skipped. `exerciseId` is optional for backward compatibility; supplying it selects the canonical catalog exercise.
+
+### Catalog endpoints
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| GET | `/api/exercises` | Alphabetical catalog of exercise IDs and names |
+| POST | `/api/exercises` | Create from `{ "name": "Cable row" }`; 201, 400 for invalid input or 409 for a duplicate |
+
+Plan exercise payloads and responses now also carry `exerciseId`. Existing clients that only send exercise names remain supported.
 
 ## Checks
 
@@ -173,13 +206,13 @@ Backend controller tests use a mocked repository and cover create responses, inv
 
 ### Verification status
 
-- Frontend: all eight API-service/draft tests and the production build pass. Browser verification covered starting, minimizing, restoring after refresh, and discarding a draft.
-- Backend: Java 21 compilation, all nine tests, and executable JAR packaging pass (`./mvnw verify`). Workout tests cover validation, session persistence, ordering, duplicate retries and history surviving source-plan deletion.
+- Frontend: all 19 catalog/API-service/draft/progress tests and the production build pass. Progress date-boundary tests also pass in Europe/Stockholm and America/Los_Angeles. Browser checks covered real-data charts on desktop and a 390 px mobile viewport, exercise selection, date-range empty/error states and filter reset. Earlier checks covered starting, minimizing, restoring after refresh and discarding a draft.
+- Backend: Java 21 compilation, all 15 tests, and executable JAR packaging pass (`./mvnw verify`). Tests cover validation, session persistence, ordering, duplicate retries, stable catalog identities and backfill, skip storage, edits that preserve timestamps, deletion cleanup and history surviving source-plan deletion. Full HTTP conversion/validation is exercised against real JPA through MockMvc without opening a network port.
 - Standard Apache Maven Wrapper 3.3.4 runs Maven 3.9.11 successfully.
 - Docker Compose configuration validates.
 - The running local REST API passed create, read, list, update, validation and delete checks. The disposable verification plan was removed; existing plans were preserved.
 - The running frontend is reachable at localhost:5173.
-- Docker socket access is denied in the agent environment. H2 testing does not establish PostgreSQL-specific compatibility. New workout endpoints still need an end-to-end PostgreSQL check after restarting the backend; starting a separate Java HTTP server for that check was blocked by sandbox socket permissions.
+- Docker socket access is denied in the agent environment. H2 testing does not establish PostgreSQL-specific compatibility. New catalog, update and delete endpoints still need an end-to-end PostgreSQL check after restarting the backend; starting a separate Java HTTP server for that check was blocked by sandbox socket permissions.
 - Local Git setup and PostgreSQL restart durability were subsequently verified by the project owner. Agent writes to `.git` remain restricted; direct GitHub commits do not update the local Git index or branch.
 
 ### Connect this existing folder to GitHub
@@ -199,7 +232,11 @@ To check PostgreSQL restart persistence, create a disposable plan in the app, ru
 
 ## Next milestones
 
-1. Add exercise progress charts using Recharts.
-2. Support adding/skipping sets and editing completed sessions.
-3. Add authentication and associate plans and sessions with users.
-4. Add database migrations and PostgreSQL-specific integration tests.
+1. Add authentication and associate plans and sessions with users.
+2. Add versioned database migrations and PostgreSQL-specific integration tests.
+3. Add exercise catalog rename/merge tools with deliberate history handling.
+4. Add previous-session suggestions while logging workouts.
+
+## Manual check after this milestone
+
+Restart the backend and refresh the frontend. Check that existing plans and History still appear. In a temporary plan/session: choose a catalog exercise, create a custom exercise, add/remove a set, skip another exercise, finish the workout, edit a weight in History and verify Progress changes. Delete the temporary workout with confirmation and verify its chart point/count disappears. Do not use real sessions for disposable verification.

@@ -9,5 +9,7 @@ public record PlanRequest(
 ) {
     public record ExerciseRequest(@NotBlank @Size(max = 100) String name,
                                   @NotNull @Min(1) @Max(50) Integer targetSets,
-                                  @NotNull @Min(1) @Max(100) Integer targetReps) {}
+                                  @NotNull @Min(1) @Max(100) Integer targetReps, @Positive Long exerciseId) {
+        public ExerciseRequest(String name, Integer targetSets, Integer targetReps) { this(name, targetSets, targetReps, null); }
+    }
 }

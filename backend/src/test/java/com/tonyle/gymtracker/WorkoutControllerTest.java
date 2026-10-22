@@ -3,6 +3,7 @@ package com.tonyle.gymtracker;
 import com.tonyle.gymtracker.plan.ApiErrors;
 import com.tonyle.gymtracker.workout.*;
 import org.junit.jupiter.api.*;
+import com.tonyle.gymtracker.exercise.*;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.http.MediaType;
@@ -21,7 +22,10 @@ class WorkoutControllerTest {
         """;
     @BeforeEach void setup() {
         repository = mock(WorkoutRepository.class);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository)).setControllerAdvice(new ApiErrors()).build();
+        var exerciseRepository = mock(ExerciseRepository.class);
+        when(exerciseRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        var catalog = new ExerciseCatalog(exerciseRepository);
+        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository, catalog)).setControllerAdvice(new ApiErrors()).build();
     }
     @Test void completesWorkoutAndReturnsSnapshot() throws Exception {
         when(repository.findById(any())).thenReturn(Optional.empty());
@@ -46,4 +50,17 @@ class WorkoutControllerTest {
         when(repository.findById(any())).thenReturn(Optional.empty());
         mvc.perform(get("/api/workouts/4b6ca5aa-e309-4cff-94d3-d1e1e7519669")).andExpect(status().isNotFound());
     }
+    @Test void rejectsAllSkippedSessionsAndContradictorySkippedSets() throws Exception {
+        String allSkipped = BODY.replace("\"sets\":[{\"weight\":12.5,\"reps\":8}]", "\"skipped\":true,\"sets\":[]");
+        mvc.perform(post("/api/workouts").contentType(MediaType.APPLICATION_JSON).content(allSkipped)).andExpect(status().isBadRequest());
+        String contradictory = BODY.replace("\"name\":\"Press\"", "\"name\":\"Press\",\"skipped\":true");
+        mvc.perform(post("/api/workouts").contentType(MediaType.APPLICATION_JSON).content(contradictory)).andExpect(status().isBadRequest());
+        verifyNoInteractions(repository);
+    }
+    @Test void rejectsMismatchedUpdateIdAndMissingDelete() throws Exception {
+        mvc.perform(put("/api/workouts/9b6ca5aa-e309-4cff-94d3-d1e1e7519669").contentType(MediaType.APPLICATION_JSON).content(BODY)).andExpect(status().isBadRequest());
+        when(repository.findById(any())).thenReturn(Optional.empty());
+        mvc.perform(delete("/api/workouts/4b6ca5aa-e309-4cff-94d3-d1e1e7519669")).andExpect(status().isNotFound());
+    }
+
 }

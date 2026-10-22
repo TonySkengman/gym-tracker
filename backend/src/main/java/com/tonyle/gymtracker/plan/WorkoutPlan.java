@@ -21,7 +21,7 @@ public class WorkoutPlan {
         name = request.name().trim();
         description = request.description() == null ? "" : request.description().trim();
         exercises.clear();
-        request.exercises().forEach(e -> exercises.add(new PlanExercise(e.name().trim(), e.targetSets(), e.targetReps())));
+        request.exercises().forEach(e -> exercises.add(new PlanExercise(e.name().trim(), e.targetSets(), e.targetReps(), e.exerciseId())));
     }
     public Long getId() { return id; }
     public String getName() { return name; }

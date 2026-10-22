@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import ExercisePicker from './ExercisePicker';
 import { Plus, Trash2, X } from 'lucide-react';
 const exercise = () => ({ name: '', targetSets: 3, targetReps: 10 });
-export default function PlanEditor({ plan, onSave, onClose }) {
+export default function PlanEditor({ plan, onSave, onClose, catalog, catalogLoading, catalogError, onCatalogRetry, onCreateExercise }) {
   const dialog = useRef(null);
   const [form, setForm] = useState(plan || { name: '', description: '', exercises: [exercise()] });
   const [saving, setSaving] = useState(false);
@@ -18,15 +19,18 @@ export default function PlanEditor({ plan, onSave, onClose }) {
       <label>Plan name<input autoFocus required maxLength={100} pattern=".*\S.*" placeholder="e.g. Upper body strength" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}/></label>
       <label>Description <span className="muted">(optional)</span><textarea maxLength={500} placeholder="What are you working toward?" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}/></label>
       <div className="flex items-center justify-between my-5"><h3>Exercises</h3><span className="muted">{form.exercises.length} / 50</span></div>
+      {catalogLoading && <p className="muted" role="status">Loading exercise catalog…</p>}
+      {catalogError && <div className="error mb-4" role="alert"><p>{catalogError}</p><button type="button" className="secondary mt-2" onClick={onCatalogRetry}>Retry catalog</button></div>}
       <div className="space-y-3">{form.exercises.map((item, index) => <div className="exercise-input" key={index}>
-        <label className="exercise-name">Exercise {index + 1}<input required maxLength={100} pattern=".*\S.*" placeholder="e.g. Bench press" value={item.name} onChange={e => changeExercise(index, 'name', e.target.value)}/></label>
+        <ExercisePicker label={`Exercise ${index + 1}`} exercise={item} catalog={catalog} disabled={saving || catalogLoading} onCreate={onCreateExercise} onChange={update => setForm({ ...form, exercises: form.exercises.map((exercise, i) => i === index ? { ...exercise, ...update } : exercise) })}/>
+
         <label>Sets<input type="number" required min="1" max="50" value={item.targetSets} onChange={e => changeExercise(index, 'targetSets', e.target.value)}/></label>
         <label>Reps<input type="number" required min="1" max="100" value={item.targetReps} onChange={e => changeExercise(index, 'targetReps', e.target.value)}/></label>
         <button type="button" className="icon-button" aria-label={`Remove exercise ${index + 1}`} disabled={form.exercises.length === 1 || saving} onClick={() => setForm({ ...form, exercises: form.exercises.filter((_, i) => i !== index) })}><Trash2 size={17}/></button>
       </div>)}</div>
       <button type="button" className="secondary mt-4" disabled={form.exercises.length >= 50 || saving} onClick={() => setForm({ ...form, exercises: [...form.exercises, exercise()] })}><Plus size={16}/>Add exercise</button>
       {error && <p role="alert" className="error mt-4">{error}</p>}
-      <div className="editor-footer"><button type="button" className="secondary" disabled={saving} onClick={onClose}>Cancel</button><button className="primary" disabled={saving}>{saving ? 'Saving…' : 'Save plan'}</button></div>
+      <div className="editor-footer"><button type="button" className="secondary" disabled={saving} onClick={onClose}>Cancel</button><button className="primary" disabled={saving || catalogLoading || Boolean(catalogError)}>{saving ? 'Saving…' : 'Save plan'}</button></div>
     </form>
   </dialog>;
 }

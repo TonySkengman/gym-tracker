@@ -17,16 +17,16 @@ public class LoggedSet {
     private BigDecimal weight;
     @Column(nullable = false)
     private int reps;
+    private Long exerciseId;
 
     protected LoggedSet() {}
-    public LoggedSet(String exerciseName, int exerciseNumber, int setNumber, int targetReps, WorkoutRequest.SetRequest set) {
-        this.exerciseName = exerciseName.trim();
-        this.exerciseNumber = exerciseNumber;
-        this.setNumber = setNumber;
-        this.targetReps = targetReps;
-        this.weight = set.weight();
-        this.reps = set.reps().intValueExact();
+    public LoggedSet(WorkoutRequest.ExerciseRequest exercise, int exerciseNumber, int setNumber, WorkoutRequest.SetRequest set) {
+        this.exerciseName = exercise.name().trim(); this.exerciseNumber = exerciseNumber;
+        this.setNumber = setNumber; this.targetReps = exercise.targetReps(); this.exerciseId = exercise.exerciseId();
+        this.weight = set.weight(); this.reps = set.reps().intValueExact();
     }
+    public Long getExerciseId() { return exerciseId; }
+    public void linkExercise(Long id) { exerciseId = id; }
     public String getExerciseName() { return exerciseName; }
     public int getExerciseNumber() { return exerciseNumber; }
     public int getSetNumber() { return setNumber; }

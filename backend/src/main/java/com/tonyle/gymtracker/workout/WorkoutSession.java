@@ -23,14 +23,24 @@ public class WorkoutSession {
     @OrderColumn(name = "set_order")
     private List<LoggedSet> sets = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "workout_skipped_exercises", joinColumns = @JoinColumn(name = "session_id"))
+    @OrderColumn(name = "skip_order")
+    private List<SkippedExercise> skippedExercises = new ArrayList<>();
+
     protected WorkoutSession() {}
     public WorkoutSession(WorkoutRequest request) {
         id = request.id(); planId = request.planId(); planName = request.planName().trim();
         startedAt = request.startedAt(); completedAt = Instant.now();
+        replaceExercises(request);
+    }
+    public void replaceExercises(WorkoutRequest request) {
+        sets.clear(); skippedExercises.clear();
         for (int i = 0; i < request.exercises().size(); i++) {
             var exercise = request.exercises().get(i);
+            if (exercise.skipped()) skippedExercises.add(new SkippedExercise(exercise, i + 1));
             for (int j = 0; j < exercise.sets().size(); j++) {
-                sets.add(new LoggedSet(exercise.name(), i + 1, j + 1, exercise.targetReps(), exercise.sets().get(j)));
+                sets.add(new LoggedSet(exercise, i + 1, j + 1, exercise.sets().get(j)));
             }
         }
     }
@@ -39,5 +49,6 @@ public class WorkoutSession {
     public String getPlanName() { return planName; }
     public Instant getStartedAt() { return startedAt; }
     public Instant getCompletedAt() { return completedAt; }
+    public List<SkippedExercise> getSkippedExercises() { return skippedExercises; }
     public List<LoggedSet> getSets() { return sets; }
 }
