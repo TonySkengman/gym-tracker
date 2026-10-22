@@ -23,6 +23,8 @@ In one terminal, start the backend:
 
 ```sh
 cd backend
+# macOS: select the installed Java 21 JDK
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ./mvnw spring-boot:run
 ```
 
@@ -36,21 +38,7 @@ npm run dev
 
 Open http://localhost:5173. The API runs at http://localhost:8080/api/plans. Vite proxies `/api` to the backend, so no CORS configuration is needed in development. The first page load should show an empty plan list. Click **New plan**, add exercises, save, and refresh to check database persistence.
 
-The local Maven launcher selects Java 21 automatically on macOS when `JAVA_HOME` is unset. On other systems, or if `JAVA_HOME` already points to another version, select Java 21 yourself:
-
-```sh
-# macOS, in the backend terminal
-export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-./mvnw -v
-```
-
-`backend/mvnw` is a small workspace-local Maven bootstrap, with its distribution URL in `.mvn/wrapper/maven-wrapper.properties`. It uses an existing Maven or downloads Maven 3.9.11 into `backend/.tools`; dependencies stay in `backend/.cache/repository`. It is not the generated Apache Maven Wrapper: network restrictions prevented downloading the generator. Once online, you can replace it with the standard generated wrapper:
-
-```sh
-cd backend
-./mvnw org.apache.maven.plugins:maven-wrapper-plugin:3.3.4:wrapper -Dtype=only-script -Dmaven=3.9.11
-chmod +x mvnw
-```
+The standard Apache Maven Wrapper is included for macOS/Linux (`mvnw`) and Windows (`mvnw.cmd`). It downloads Maven 3.9.11 on first use. Select a Java 21 JDK with `JAVA_HOME`; the wrapper does not select a JDK for you. Check the active versions with `./mvnw -v`.
 
 ## Configuration
 
@@ -93,9 +81,9 @@ backend/
     GymTrackerApplication.java
     plan/                      # Entity, DTOs, repository, controller, error handling
   src/main/resources/application.properties
-  src/test/java/com/tonyle/gymtracker/PlanControllerTest.java
+  src/test/java/com/tonyle/gymtracker/ # Controller and JPA persistence tests
   pom.xml
-  mvnw
+  mvnw / mvnw.cmd
   .mvn/wrapper/maven-wrapper.properties
 docker-compose.yml
 .env.example
@@ -141,31 +129,37 @@ cd backend
 ./mvnw package
 ```
 
-Backend controller tests use a mocked repository and do not need a running database. They cover create responses, invalid requests, exercise replacement, deletion and missing plans. PostgreSQL persistence still requires a manual end-to-end check with Docker running.
+Backend controller tests use a mocked repository and cover create responses, invalid requests, exercise replacement, deletion and missing plans. A separate Spring Boot integration test uses an in-memory H2 database in PostgreSQL compatibility mode to check real JPA persistence, exercise ordering, updates and deletion across separate transactions. H2 is test-only; the application still uses PostgreSQL. Mockito uses its interface proxy mock maker, avoiding Java agent attachment for repository mocks.
 
-### Initial setup verification
+### Verification status
 
-- Frontend dependencies installed from the existing npm cache; lockfile included.
-- Frontend production build passed.
-- Two frontend API-service tests passed.
-- Docker Compose configuration and Maven launcher shell syntax passed validation.
-- Java 21 is installed, though the system default was Java 25.
-- Backend source was scaffolded manually because Spring Initializr was unreachable.
-- Backend tests/build could not run: the required Bean Validation artifacts were not cached, and DNS/network access to Maven Central was unavailable.
-- The Maven bootstrap download was also blocked by DNS/network restrictions.
-- Database startup and persistence were not verified because the Docker engine was stopped.
-- Browser verification was blocked because this execution environment refused the Vite server's local port binding (`EPERM`). Run the launch commands in your own terminal.
-- Git initialization was blocked by workspace permissions on `.git`. Run the following from the project root in your own terminal:
+- Frontend: both API-service tests and the production build pass.
+- Backend: Java 21 compilation, all five tests, and executable JAR packaging pass (`./mvnw verify`).
+- Standard Apache Maven Wrapper 3.3.4 runs Maven 3.9.11 successfully.
+- Docker Compose configuration validates.
+- The running local REST API passed create, read, list, update, validation and delete checks. The disposable verification plan was removed; existing plans were preserved.
+- The running frontend is reachable at localhost:5173.
+- Docker socket access is denied in the agent environment, so container health and PostgreSQL restart durability still need checking from your own terminal. H2 testing does not establish PostgreSQL-specific compatibility.
+- Local `.git` writes remain denied in the agent environment. Commits can be saved directly to GitHub through the connected integration, but the local folder must be connected separately.
+
+### Connect this existing folder to GitHub
+
+The GitHub repository already contains the initial project. In your own terminal, from the project root, run the following **only if this folder does not already contain its own `.git` directory**:
 
 ```sh
-git init -b main
-git add .
-git commit -m "Set up gym tracker with workout plan management"
+git init -b main &&
+git remote add origin https://github.com/TonySkengman/gym-tracker.git &&
+git fetch origin main &&
+git reset --mixed origin/main
 ```
+
+This connects local history to the remote branch and leaves your working files in place. It does not delete your files. Review `git status` afterward; any local differences remain uncommitted. Once connected, future changes can use the normal add, commit and push workflow.
+
+To check PostgreSQL restart persistence, create a disposable plan in the app, run `docker compose restart postgres`, wait for the database to become healthy, then refresh the app. Delete that plan after verification. Never remove the data volume to test persistence.
 
 ## Next milestones
 
 1. Log workout sessions with actual weights, sets and reps.
 2. Add session history and exercise progress charts using Recharts.
 3. Add authentication and associate plans and sessions with users.
-4. Add database migrations and database integration tests.
+4. Add database migrations and PostgreSQL-specific integration tests.
