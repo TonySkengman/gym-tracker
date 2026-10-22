@@ -4,7 +4,7 @@ import java.util.List;
 public record PlanResponse(Long id, String name, String description, List<ExerciseResponse> exercises) {
     public static PlanResponse from(WorkoutPlan plan) {
         return new PlanResponse(plan.getId(), plan.getName(), plan.getDescription(), plan.getExercises().stream()
-            .map(e -> new ExerciseResponse(e.getName(), e.getTargetSets(), e.getTargetReps(), e.getExerciseId())).toList());
+            .map(e -> new ExerciseResponse(e.getName(), e.getTargetSets(), e.getTargetReps(), e.getExerciseId(), e.getRestSeconds())).toList());
     }
-    public record ExerciseResponse(String name, int targetSets, int targetReps, Long exerciseId) {}
+    public record ExerciseResponse(String name, int targetSets, int targetReps, Long exerciseId, Integer restSeconds) {}
 }

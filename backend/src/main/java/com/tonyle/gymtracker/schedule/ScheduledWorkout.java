@@ -17,6 +17,10 @@ public class ScheduledWorkout {
     @Column(name = "workout_date", nullable = false)
     private LocalDate date;
     private UUID completedWorkoutId;
+    // Nullable only for data created before accounts were introduced.
+    private Long ownerId;
+    public Long getOwnerId() { return ownerId; }
+    public void assignOwner(Long ownerId) { this.ownerId = ownerId; }
     protected ScheduledWorkout() {}
     public ScheduledWorkout(Long planId, String planName, LocalDate date) { update(planId, planName, date); }
     public void update(Long planId, String planName, LocalDate date) { this.planId = planId; this.planName = planName; this.date = date; }

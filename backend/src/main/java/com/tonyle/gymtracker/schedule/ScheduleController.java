@@ -1,5 +1,6 @@
 package com.tonyle.gymtracker.schedule;
 
+import com.tonyle.gymtracker.auth.CurrentUser;
 import com.tonyle.gymtracker.plan.PlanRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -24,19 +25,20 @@ public class ScheduleController {
     public record ScheduleResponse(Long id, Long planId, String planName, LocalDate date, boolean planAvailable, UUID completedWorkoutId) {}
 
     @GetMapping public List<ScheduleResponse> all() {
-        return repository.findAll(Sort.by("date", "id")).stream().map(this::response).toList();
+        return repository.findByOwnerId(CurrentUser.id(), Sort.by("date", "id")).stream().map(this::response).toList();
     }
     @PostMapping public ResponseEntity<ScheduleResponse> create(@Valid @RequestBody ScheduleRequest request) {
         validateDate(request.date());
-        var plan = plans.findById(request.planId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an existing workout plan"));
-        var entry = repository.saveAndFlush(new ScheduledWorkout(plan.getId(), plan.getName(), request.date()));
+        var plan = plans.findById(request.planId()).filter(candidate -> CurrentUser.id().equals(candidate.getOwnerId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an existing workout plan"));
+        var entry = new ScheduledWorkout(plan.getId(), plan.getName(), request.date());
+        entry.assignOwner(CurrentUser.id()); entry = repository.saveAndFlush(entry);
         return ResponseEntity.created(URI.create("/api/schedule/" + entry.getId())).body(response(entry));
     }
     @PutMapping("/{id}") public ScheduleResponse update(@PathVariable Long id, @Valid @RequestBody ScheduleRequest request) {
         var entry = find(id);
         if (entry.getCompletedWorkoutId() != null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Completed workouts cannot be rescheduled. Add a new schedule entry instead.");
         validateDate(request.date());
-        var plan = plans.findById(request.planId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an existing workout plan"));
+        var plan = plans.findById(request.planId()).filter(candidate -> CurrentUser.id().equals(candidate.getOwnerId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an existing workout plan"));
         entry.update(plan.getId(), plan.getName(), request.date()); repository.flush();
         return response(entry);
     }
@@ -46,9 +48,9 @@ public class ScheduleController {
     public ProblemDetail duplicate(org.springframework.dao.DataIntegrityViolationException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "This plan is already scheduled for that date.");
     }
-    private ScheduledWorkout find(Long id) { return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Scheduled workout not found")); }
+    private ScheduledWorkout find(Long id) { return repository.findById(id).filter(entry -> CurrentUser.id().equals(entry.getOwnerId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Scheduled workout not found")); }
     private ScheduleResponse response(ScheduledWorkout entry) {
-        var plan = plans.findById(entry.getPlanId());
+        var plan = plans.findById(entry.getPlanId()).filter(item -> CurrentUser.id().equals(item.getOwnerId()));
         return new ScheduleResponse(entry.getId(), entry.getPlanId(), plan.map(item -> item.getName()).orElse(entry.getPlanName()), entry.getDate(), plan.isPresent(), entry.getCompletedWorkoutId());
     }
     private void validateDate(LocalDate date) {

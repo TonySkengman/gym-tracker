@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class WorkoutControllerTest {
+class WorkoutControllerTest extends AuthenticatedTest {
     private WorkoutRepository repository;
     private MockMvc mvc;
     private static final String BODY = """
@@ -26,7 +26,7 @@ class WorkoutControllerTest {
         var exerciseRepository = mock(ExerciseRepository.class);
         when(exerciseRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var catalog = new ExerciseCatalog(exerciseRepository);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository, catalog, new ScheduleService(mock(ScheduleRepository.class)))).setControllerAdvice(new ApiErrors()).build();
+        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository, catalog, new ScheduleService(mock(ScheduleRepository.class)), mock(com.tonyle.gymtracker.plan.PlanRepository.class))).setControllerAdvice(new ApiErrors()).build();
     }
     @Test void completesWorkoutAndReturnsSnapshot() throws Exception {
         when(repository.findById(any())).thenReturn(Optional.empty());

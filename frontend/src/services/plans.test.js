@@ -4,7 +4,7 @@ import { getPlans, savePlan, deletePlan } from './plans.js';
 test('plan API supports create, update, list and delete', async () => {
   const original = globalThis.fetch;
   const calls = [];
-  globalThis.fetch = async (url, options) => {
+  globalThis.fetch = async (url, options) => { if (url === '/api/auth/csrf') return { ok: true, json: async () => ({ token: 'test-csrf', headerName: 'X-CSRF-TOKEN' }) };
     calls.push({ url, ...options });
     return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => ({ id: 7 }) };
   };
@@ -12,7 +12,7 @@ test('plan API supports create, update, list and delete', async () => {
     const draft = { name: 'Upper', description: '', exercises: [{ name: 'Press', targetSets: '3', targetReps: '8', id: 99 }] };
     await savePlan(draft); await savePlan({ ...draft, id: 7 }); await getPlans(); await deletePlan(7);
     assert.equal(calls[0].method, 'POST');
-    assert.deepEqual(JSON.parse(calls[0].body).exercises, [{ name: 'Press', targetSets: 3, targetReps: 8 }]);
+    assert.deepEqual(JSON.parse(calls[0].body).exercises, [{ name: 'Press', targetSets: 3, targetReps: 8, restSeconds: null }]);
     assert.equal(calls[1].url, '/api/plans/7'); assert.equal(calls[1].method, 'PUT');
     assert.equal(calls[2].url, '/api/plans'); assert.equal(calls[3].method, 'DELETE');
   } finally { globalThis.fetch = original; }
@@ -26,5 +26,18 @@ test('network and validation errors are surfaced without false success', async (
     await assert.rejects(getPlans(), /Name is required/);
     globalThis.fetch = async () => ({ ok: false, json: async () => { throw new Error('html'); } });
     await assert.rejects(getPlans(), /Check that the backend/);
+  } finally { globalThis.fetch = original; }
+});
+
+test('plan API sends optional rest seconds as numbers and preserves zero', async () => {
+  const original = globalThis.fetch, bodies = [];
+  try {
+    globalThis.fetch = async (url, options) => {
+      if (url === '/api/auth/csrf') return { ok: true, json: async () => ({ token: 'csrf', headerName: 'X-CSRF-TOKEN' }) };
+      bodies.push(JSON.parse(options.body)); return { ok: true, json: async () => ({ id: 1 }) };
+    };
+    for (const restSeconds of ['90', '0', '', undefined])
+      await savePlan({ name: 'Upper', exercises: [{ name: 'Press', targetSets: 3, targetReps: 8, restSeconds }] });
+    assert.deepEqual(bodies.map(body => body.exercises[0].restSeconds), [90, 0, null, null]);
   } finally { globalThis.fetch = original; }
 });

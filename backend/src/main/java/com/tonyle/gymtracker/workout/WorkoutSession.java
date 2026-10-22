@@ -28,6 +28,10 @@ public class WorkoutSession {
     @OrderColumn(name = "skip_order")
     private List<SkippedExercise> skippedExercises = new ArrayList<>();
 
+    // Nullable only for data created before accounts were introduced.
+    private Long ownerId;
+    public Long getOwnerId() { return ownerId; }
+    public void assignOwner(Long ownerId) { this.ownerId = ownerId; }
     protected WorkoutSession() {}
     public WorkoutSession(WorkoutRequest request) {
         id = request.id(); planId = request.planId(); planName = request.planName().trim();

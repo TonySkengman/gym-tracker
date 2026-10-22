@@ -15,13 +15,17 @@ public class WorkoutPlan {
     @CollectionTable(name = "plan_exercises", joinColumns = @JoinColumn(name = "plan_id"))
     @OrderColumn(name = "exercise_order")
     private List<PlanExercise> exercises = new ArrayList<>();
+    // Nullable only for data created before accounts were introduced.
+    private Long ownerId;
+    public Long getOwnerId() { return ownerId; }
+    public void assignOwner(Long ownerId) { this.ownerId = ownerId; }
     protected WorkoutPlan() {}
     public WorkoutPlan(PlanRequest request) { update(request); }
     public void update(PlanRequest request) {
         name = request.name().trim();
         description = request.description() == null ? "" : request.description().trim();
         exercises.clear();
-        request.exercises().forEach(e -> exercises.add(new PlanExercise(e.name().trim(), e.targetSets(), e.targetReps(), e.exerciseId())));
+        request.exercises().forEach(e -> exercises.add(new PlanExercise(e.name().trim(), e.targetSets(), e.targetReps(), e.exerciseId(), e.restSeconds())));
     }
     public Long getId() { return id; }
     public String getName() { return name; }

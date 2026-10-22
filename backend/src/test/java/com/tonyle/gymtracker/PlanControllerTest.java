@@ -9,7 +9,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-class PlanControllerTest {
+class PlanControllerTest extends AuthenticatedTest {
     private PlanRepository repository;
     private MockMvc mvc;
     private static final String PLAN = """
@@ -36,6 +36,7 @@ class PlanControllerTest {
     }
     @Test void updateReplacesExercisesAndDeleteRemovesPlan() throws Exception {
         var plan = new WorkoutPlan(new PlanRequest("Old", "", java.util.List.of(new PlanRequest.ExerciseRequest("Squat", 5, 5))));
+        plan.assignOwner(1L);
         when(repository.findById(1L)).thenReturn(Optional.of(plan));
         mvc.perform(put("/api/plans/1").contentType(MediaType.APPLICATION_JSON).content(PLAN))
             .andExpect(status().isOk()).andExpect(jsonPath("$.exercises.length()").value(1))
@@ -47,5 +48,14 @@ class PlanControllerTest {
         mvc.perform(get("/api/plans/99")).andExpect(status().isNotFound());
         mvc.perform(put("/api/plans/99").contentType(MediaType.APPLICATION_JSON).content(PLAN)).andExpect(status().isNotFound());
         mvc.perform(delete("/api/plans/99")).andExpect(status().isNotFound());
+    }
+
+    @Test void rejectsNegativeOrExcessiveRest() throws Exception {
+        for (String rest : new String[] { "-1", "3601" }) {
+            mvc.perform(post("/api/plans").contentType(MediaType.APPLICATION_JSON)
+                .content(PLAN.replace("\"targetSets\":3", "\"restSeconds\":" + rest + ",\"targetSets\":3")))
+                .andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(repository);
     }
 }

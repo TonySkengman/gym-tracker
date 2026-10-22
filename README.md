@@ -6,7 +6,7 @@ A full-stack gym workout tracker built as a portfolio project. Create routines, 
 
 - React + Vite, JavaScript, Tailwind CSS, Lucide icons
 - Recharts for exercise progress charts
-- Java 21, Spring Boot 4.1.1, Maven, Spring Data JPA, Bean Validation
+- Java 21, Spring Boot 4.1.1, Maven, Spring Data JPA, Spring Security, Bean Validation
 - PostgreSQL 17 via Docker Compose
 
 ## Start locally
@@ -114,7 +114,7 @@ export DB_PASSWORD=gym_local_dev
 
 PostgreSQL applies initial user/database settings only when creating its data volume. Changing `.env` later does not change existing database credentials. Stop the database with `docker compose stop`; `docker compose down` removes containers but preserves saved data. Avoid `docker compose down -v` unless you intend to delete all database data.
 
-Schema creation uses Hibernate `ddl-auto=update` for this learning milestone. Add versioned migrations before deployment. This initial app has no authentication and is intended for local use only.
+Schema creation uses Hibernate `ddl-auto=update` for this learning milestone. Add versioned migrations before deployment. Accounts use Spring Security sessions, CSRF protection and BCrypt password hashes. Set `SESSION_COOKIE_SECURE=true` when serving over HTTPS in production. Password reset, email verification and login rate limiting are future deployment work.
 
 ## Project structure
 
@@ -258,15 +258,66 @@ To check PostgreSQL restart persistence, create a disposable plan in the app, ru
 
 ## Next milestones
 
-1. Add authentication and associate plans and sessions with users.
-2. Add versioned database migrations and PostgreSQL-specific integration tests.
-3. Add exercise catalog rename/merge tools with deliberate history handling.
-4. Add previous-session suggestions while logging workouts.
+1. Add versioned database migrations and PostgreSQL-specific integration tests.
+2. Add exercise catalog rename/merge tools with deliberate history handling.
+3. Add previous-session suggestions while logging workouts.
 
 ## Manual check after this milestone
 
-Restart the backend and refresh the frontend. Check that existing plans and History still appear. In a temporary plan/session: choose a catalog exercise, create a custom exercise, add/remove a set, skip another exercise, finish the workout, edit a weight in History and verify Progress changes. Delete the temporary workout with confirmation and verify its chart point/count disappears. Do not use real sessions for disposable verification.
+Restart the backend and refresh the frontend. Register or log in, then check that your account’s plans and History appear. Pre-account data requires the optional ownership migration below. In a temporary plan/session: choose a catalog exercise, create a custom exercise, add/remove a set, skip another exercise, finish the workout, edit a weight in History and verify Progress changes. Delete the temporary workout with confirmation and verify its chart point/count disappears. Do not use real sessions for disposable verification.
 
 ### Manual Schedule check
 
 Restart the backend, refresh the app, then open **Schedule**. Add a temporary booking for today and a different plan tomorrow. Verify Dashboard shows today's booking first. Start and finish the first workout from the calendar, then verify the completed marker and next workout change. Delete that disposable session to check the booking reopens; remove the temporary bookings afterward. Also check month navigation and the calendar layout on your phone.
+
+## Guest mode
+
+The dashboard opens without requiring login. Guests can create/edit/delete plans, use the built-in 50-exercise catalog, add temporary exercises, schedule workouts, record sets, edit History and view Progress for the current visit. Guest data lives only in memory: it is not sent to the backend and is not stored in localStorage, sessionStorage or PostgreSQL. Refreshing, closing or leaving the app clears it.
+
+The **Guest mode** notice and **Log in / Register** actions explain how to keep future training. Opening the account form and choosing **Continue as guest** preserves the current guest workspace and unfinished workout. Successful registration/login opens the account’s saved workspace and discards guest data; it does not automatically import guest records. Logout opens a fresh guest workspace. Guest functionality works even if the backend is unavailable; account access requires the backend and PostgreSQL.
+
+Manual check: open while signed out, create a temporary plan, schedule and complete a workout, then check History/Progress. Open and cancel the login form to confirm the temporary work remains. Refresh to confirm all guest records and drafts disappear. Register or log in, save a plan and refresh to confirm account data persists. Log out to confirm it is absent from the guest workspace.
+
+## Accounts and private data
+
+To keep your training between visits, register with your name, email and password (8–72 characters, at most 72 UTF-8 bytes), then log in using your email and password. Registration signs you in automatically. Use **Log out** to end the session. Refresh restores an active session; sessions expire after 30 minutes without server activity. Passwords are hashed with BCrypt and never returned by the API. Authentication uses an HttpOnly, SameSite=Lax session cookie, not a browser-stored JWT.
+
+Plans, calendar bookings, workout History and Progress belong to the signed-in user. Other users’ record IDs return 404. Exercise names form a shared catalog, seeded with 50 common gym exercises; signed-in users can add names. Unfinished browser drafts use separate keys per account and can be resumed after logging back in on the same browser. Old unowned browser drafts are not imported.
+
+All data endpoints require authentication. For non-GET requests, fetch `/api/auth/csrf` first and send its `token` under the returned `headerName`, keeping the session cookie. Fetch a fresh token after login, registration or logout. The frontend handles this automatically through `services/auth.js`.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/api/auth/csrf` | CSRF token and header name; available before login |
+| POST | `/api/auth/register` | `{ "displayName": "Tony", "email": "tony@example.com", "password": "your-password" }`; 201 and signed-in user |
+| POST | `/api/auth/login` | Email and password; 200 or 401 |
+| GET | `/api/auth/me` | Current account ID, display name and email; 401 when signed out |
+| POST | `/api/auth/logout` | Invalidate the session and expire its cookie; 204 |
+
+### Existing data from before accounts
+
+Existing database rows are preserved with no owner and hidden from registered users. They are never automatically assigned to the first person who registers. If **all unowned data in your local database is yours**, register your account, then explicitly assign that data once from the project root (replace the email with your registered email):
+
+```sh
+docker compose exec -T postgres psql -U gym -d gym_tracker -v email='tony@example.com' < backend/scripts/assign-legacy-data.sql
+```
+
+Use your configured database username/name if different. The transaction stops if the account does not exist and updates only unowned rows; it never transfers another account’s data. Refresh after running it. Back up important data before manually migrating ownership.
+
+### Manual account check
+
+1. Restart the backend, refresh the app and register account A.
+2. Create a plan and calendar booking; finish a disposable workout and check History/Progress.
+3. Log out, register account B and confirm those records are absent. Create a separate plan.
+4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
+5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
+
+Current verification: 35 frontend tests, 23 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+
+Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
+
+### Planned rest between sets
+
+Each exercise in the new/edit plan dialog has an optional **Rest (sec)** field. Enter 0–3600 seconds (for example, 90), or leave it blank for no target. Rest targets appear on plan cards, calendar plan details and the active workout screen. They are saved with account plans and remain temporary for guests. Existing plans have no rest target until you add one. Restart the backend after updating so Hibernate adds the nullable `plan_exercises.rest_seconds` column.
+
+Plan API exercise objects accept optional `restSeconds` (integer or null). Updating a plan can change it or clear it with null. This is a planned duration; completed workout history continues to record actual weights and reps.

@@ -42,7 +42,7 @@ test('upcoming includes today, excludes completed/deleted/past entries, and keep
 test('schedule API creates, reschedules and removes entries without shifting the date', async () => {
   const original = globalThis.fetch; const calls = [];
   try {
-    globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => ({ id: 7 }) }; };
+    globalThis.fetch = async (url, options) => { if (url === '/api/auth/csrf') return { ok: true, json: async () => ({ token: 'test-csrf', headerName: 'X-CSRF-TOKEN' }) }; calls.push({ url, ...options }); return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => ({ id: 7 }) }; };
     await getSchedule(); await saveScheduledWorkout({ planId: '12', date: '2026-10-25' });
     await saveScheduledWorkout({ id: 7, planId: 12, date: '2026-10-26' }); await deleteScheduledWorkout(7);
     assert.equal(calls[0].url, '/api/schedule');

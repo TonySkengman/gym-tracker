@@ -16,7 +16,7 @@ test('draft copies plan targets without sharing mutable set inputs', () => {
 test('workout API sends numeric weights and reps and preserves retry ID', async () => {
   const original = globalThis.fetch;
   const calls = [];
-  globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return { ok: true, json: async () => [] }; };
+  globalThis.fetch = async (url, options) => { if (url === '/api/auth/csrf') return { ok: true, json: async () => ({ token: 'test-csrf', headerName: 'X-CSRF-TOKEN' }) }; calls.push({ url, ...options }); return { ok: true, json: async () => [] }; };
   try {
     const draft = createWorkoutDraft({ id: 1, name: 'Upper', exercises: [{ name: 'Press', targetSets: 1, targetReps: 8 }] });
     draft.exercises[0].sets[0] = { weight: '12.5', reps: '8' };
@@ -81,7 +81,7 @@ test('history editing reconstructs skipped exercises and sends PUT; deletion acc
   assert.equal(draft.exercises[1].sets[0].weight, '20');
   const original = globalThis.fetch; const calls = [];
   try {
-    globalThis.fetch = async (url, options) => { calls.push({ url, ...options }); return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => saved }; };
+    globalThis.fetch = async (url, options) => { if (url === '/api/auth/csrf') return { ok: true, json: async () => ({ token: 'test-csrf', headerName: 'X-CSRF-TOKEN' }) }; calls.push({ url, ...options }); return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => saved }; };
     await updateWorkout(draft); assert.equal(calls[0].method, 'PUT'); assert.equal(calls[0].url, '/api/workouts/session-1');
     assert.equal(await deleteWorkout(saved.id), null); assert.equal(calls[1].method, 'DELETE');
   } finally { globalThis.fetch = original; }

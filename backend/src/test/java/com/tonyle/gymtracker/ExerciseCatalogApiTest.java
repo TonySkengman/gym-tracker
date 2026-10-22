@@ -20,13 +20,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.datasource.url=jdbc:h2:mem:catalog-api;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
     "spring.datasource.username=sa", "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-class ExerciseCatalogApiTest {
+class ExerciseCatalogApiTest extends AuthenticatedTest {
     @Autowired WebApplicationContext context;
     @Autowired ExerciseCatalog catalog;
+    @Autowired CatalogInitializer initializer;
+    @Autowired ExerciseRepository exercises;
     @Autowired WorkoutController workouts;
     @Autowired JdbcTemplate jdbc;
     private MockMvc mvc;
     @BeforeEach void setup() { mvc = MockMvcBuilders.webAppContextSetup(context).build(); }
+
+    @Test void expandedCatalogPreservesExistingEntriesAcrossRestarts() throws Exception {
+        var existing = catalog.resolve(null, "  LATERAL   RAISE ");
+        long count = exercises.count();
+        assertTrue(count >= 50);
+        initializer.run(null);
+        initializer.run(null);
+        assertEquals(count, exercises.count());
+        assertEquals(existing.getId(), catalog.resolve(null, "Lateral raise").getId());
+        mvc.perform(get("/api/exercises")).andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.name == 'Hip thrust')]").isNotEmpty())
+            .andExpect(jsonPath("$[?(@.name == 'Cable crunch')]").isNotEmpty());
+    }
 
     @Test void catalogCreatesCanonicalNamesAndRejectsDuplicatesOrInvalidInput() throws Exception {
         mvc.perform(get("/api/exercises")).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.name == 'Bench press')]").isNotEmpty());

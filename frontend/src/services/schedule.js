@@ -1,3 +1,4 @@
+import { apiFetch } from './auth.js';
 import { localDateKey } from './progress.js';
 
 export const getSchedule = () => request();
@@ -5,7 +6,7 @@ export const saveScheduledWorkout = entry => request(entry.id ? `/${entry.id}` :
 export const deleteScheduledWorkout = id => request(`/${id}`, { method: 'DELETE' });
 async function request(path = '', options = {}) {
   let response;
-  try { response = await fetch(`/api/schedule${path}`, { ...options, headers: { 'Content-Type': 'application/json' } }); }
+  try { response = await apiFetch(`/api/schedule${path}`, { ...options, headers: { 'Content-Type': 'application/json' } }); }
   catch { throw new Error('Cannot reach the schedule. Check the connection and retry.'); }
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));

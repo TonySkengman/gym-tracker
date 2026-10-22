@@ -1,3 +1,4 @@
+import { apiFetch } from './auth.js';
 export async function getWorkouts() {
   return request();
 }
@@ -16,7 +17,7 @@ export function workoutPayload(draft) {
 async function saveWorkout(draft, path, method) { return request({ method, body: JSON.stringify(workoutPayload(draft)) }, path); }
 async function request(options = {}, path = '') {
   let response;
-  try { response = await fetch(`/api/workouts${path}`, { ...options, headers: { 'Content-Type': 'application/json' } }); }
+  try { response = await apiFetch(`/api/workouts${path}`, { ...options, headers: { 'Content-Type': 'application/json' } }); }
   catch { throw new Error('Cannot reach the server. Your changes have not been saved. Please retry.'); }
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -26,11 +27,11 @@ async function request(options = {}, path = '') {
 }
 export const DRAFT_KEY = 'form-active-workout-v1';
 export function createWorkoutDraft(plan) {
-  return { id: crypto.randomUUID(), planId: plan.id, planName: plan.name, startedAt: new Date().toISOString(), exercises: plan.exercises.map(exercise => ({ name: exercise.name, exerciseId: exercise.exerciseId ?? null, targetSets: exercise.targetSets, skipped: false, targetReps: exercise.targetReps, sets: Array.from({ length: exercise.targetSets }, () => ({ weight: '', reps: '' })) })) };
+  return { id: crypto.randomUUID(), planId: plan.id, planName: plan.name, startedAt: new Date().toISOString(), exercises: plan.exercises.map(exercise => ({ name: exercise.name, exerciseId: exercise.exerciseId ?? null, targetSets: exercise.targetSets, restSeconds: exercise.restSeconds ?? null, skipped: false, targetReps: exercise.targetReps, sets: Array.from({ length: exercise.targetSets }, () => ({ weight: '', reps: '' })) })) };
 }
-export function readWorkoutDraft() {
+export function readWorkoutDraft(key = DRAFT_KEY) {
   try {
-    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY));
+    const draft = JSON.parse(localStorage.getItem(key));
     if (!draft || typeof draft.id !== 'string' || typeof draft.planName !== 'string' || !Number.isFinite(Date.parse(draft.startedAt)) || !Array.isArray(draft.exercises) || !draft.exercises.length) return null;
     if (!draft.exercises.every(exercise => typeof exercise.name === 'string' && Array.isArray(exercise.sets) && exercise.sets.length && exercise.sets.every(set => set && ['string', 'number'].includes(typeof set.weight) && ['string', 'number'].includes(typeof set.reps)))) return null;
     return draft;

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
     "spring.datasource.url=jdbc:h2:mem:workout-tests;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
     "spring.datasource.username=sa", "spring.datasource.password=", "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-class WorkoutPersistenceTest {
+class WorkoutPersistenceTest extends AuthenticatedTest {
     @Autowired WorkoutController workouts;
     @Autowired WorkoutRepository repository;
     @Autowired PlanController plans;
@@ -86,10 +86,11 @@ class WorkoutPersistenceTest {
     }
 
     @Test void legacyBackfillPreservesNamesAndAddsStableIdentitiesIdempotently() {
-        var legacyPlan = planRepository.save(new WorkoutPlan(new PlanRequest("Legacy", "", List.of(new PlanRequest.ExerciseRequest("  Legacy   PRESS ", 2, 8)))));
+        var legacyPlan = new WorkoutPlan(new PlanRequest("Legacy", "", List.of(new PlanRequest.ExerciseRequest("  Legacy   PRESS ", 2, 8))));
+        legacyPlan.assignOwner(1L); legacyPlan = planRepository.save(legacyPlan);
         var request = new WorkoutRequest(UUID.randomUUID(), legacyPlan.getId(), "Legacy", Instant.now().minusSeconds(60), List.of(
             new WorkoutRequest.ExerciseRequest("legacy press", 8, List.of(new WorkoutRequest.SetRequest(BigDecimal.TEN, BigDecimal.TEN)))));
-        repository.save(new WorkoutSession(request));
+        var legacySession = new WorkoutSession(request); legacySession.assignOwner(1L); repository.save(legacySession);
         try {
             initializer.run(null);
             var planExercise = plans.get(legacyPlan.getId()).exercises().getFirst();

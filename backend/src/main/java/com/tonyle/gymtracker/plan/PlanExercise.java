@@ -9,6 +9,9 @@ public class PlanExercise {
     private int targetSets;
     @Column(nullable = false)
     private int targetReps;
+    private Integer restSeconds;
+    public Integer getRestSeconds() { return restSeconds; }
+    public PlanExercise(String name, int targetSets, int targetReps, Long exerciseId, Integer restSeconds) { this(name, targetSets, targetReps, exerciseId); this.restSeconds = restSeconds; }
     protected PlanExercise() {}
     public PlanExercise(String name, int targetSets, int targetReps) { this.name = name; this.targetSets = targetSets; this.targetReps = targetReps; }
     public PlanExercise(String name, int targetSets, int targetReps, Long exerciseId) { this(name, targetSets, targetReps); this.exerciseId = exerciseId; }

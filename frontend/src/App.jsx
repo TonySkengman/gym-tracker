@@ -14,7 +14,11 @@ import { matchesWorkoutDraft, completeWorkout, createWorkoutDraft, DRAFT_KEY, ge
 import { deletePlan, getPlans, savePlan } from './services/plans';
 const WorkoutProgress = lazy(() => import('./components/WorkoutProgress'));
 const navigation = [{ name: 'Dashboard', icon: LayoutDashboard }, { name: 'Workout Plans', icon: ListChecks }, { name: 'Schedule', icon: CalendarDays }, { name: 'History', icon: History }, { name: 'Progress', icon: TrendingUp }, { name: 'Exercises', icon: Dumbbell }];
-export default function App() {
+const accountApi = { getPlans, savePlan, deletePlan, getExercises, createExercise, getWorkouts, completeWorkout, updateWorkout, deleteWorkout, getSchedule, saveScheduledWorkout, deleteScheduledWorkout };
+export default function App({ user, onLogout, logoutBusy, onSignIn, services = accountApi }) {
+  const guest = !user;
+  const { getPlans, savePlan, deletePlan, getExercises, createExercise, getWorkouts, completeWorkout, updateWorkout, deleteWorkout, getSchedule, saveScheduledWorkout, deleteScheduledWorkout } = services;
+  const draftKey = user ? `${DRAFT_KEY}-user-${user.id}` : null;
   const [page, setPage] = useState('Dashboard');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +29,7 @@ export default function App() {
   const [workouts, setWorkouts] = useState([]);
   const [workoutsLoading, setWorkoutsLoading] = useState(true);
   const [workoutsError, setWorkoutsError] = useState('');
-  const [draft, setDraft] = useState(readWorkoutDraft);
+  const [draft, setDraft] = useState(() => guest ? null : readWorkoutDraft(draftKey));
   const [workoutOpen, setWorkoutOpen] = useState(false);
   const [draftWarning, setDraftWarning] = useState('');
   const [catalog, setCatalog] = useState([]);
@@ -80,12 +84,13 @@ export default function App() {
     catch (error) { setHistoryActionError(error.message); } finally { setDeletingWorkoutId(null); }
   }
   useEffect(() => {
+    if (guest) return;
     try {
-      if (draft) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-      else localStorage.removeItem(DRAFT_KEY);
+      if (draft) localStorage.setItem(draftKey, JSON.stringify(draft));
+      else localStorage.removeItem(draftKey);
       setDraftWarning('');
     } catch { setDraftWarning('Browser storage is unavailable. Keep this page open until your workout is saved.'); }
-  }, [draft]);
+  }, [draft, draftKey, guest]);
   async function loadWorkouts() {
     setWorkoutsLoading(true); setWorkoutsError('');
     try { setWorkouts(await getWorkouts()); } catch (error) { setWorkoutsError(error.message); } finally { setWorkoutsLoading(false); }
@@ -100,7 +105,7 @@ export default function App() {
     setWorkouts(current => [saved, ...current.filter(item => item.id !== saved.id)]);
     if (session.scheduleId) setSchedule(current => current.map(entry => entry.id === session.scheduleId && entry.planId === session.planId && !entry.completedWorkoutId ? { ...entry, completedWorkoutId: saved.id } : entry));
     setDraft(null); setWorkoutOpen(false); setWorkoutsError('');
-    setPage('History'); setNotice('Workout completed and saved.');
+    setPage('History'); setNotice(guest ? 'Workout completed for this visit. Log in to keep future workouts.' : 'Workout completed and saved.');
   }
   function discardWorkout() {
     if (!window.confirm('Discard this unfinished workout and its recorded sets?')) return;
@@ -115,7 +120,7 @@ export default function App() {
     const saved = await savePlan(plan);
     setPlans(current => plan.id ? current.map(item => item.id === saved.id ? saved : item) : [saved, ...current]);
     setSchedule(current => current.map(entry => entry.planId === saved.id ? { ...entry, planName: saved.name, planAvailable: true } : entry));
-    setError(''); setNotice('Workout plan saved.');
+    setError(''); setNotice(guest ? 'Plan added for this visit only.' : 'Workout plan saved.');
   }
   async function remove(plan) {
     if (!window.confirm(`Delete “${plan.name}”? This cannot be undone.`)) return;
@@ -125,19 +130,20 @@ export default function App() {
   }
   const totalExercises = plans.reduce((sum, plan) => sum + plan.exercises.length, 0);
   return <div className="app-shell">
-    <aside className="sidebar"><a className="brand" href="#" onClick={e => { e.preventDefault(); setPage('Dashboard'); }}><span className="brand-icon"><Dumbbell size={24}/></span>form<span className="brand-dot">.</span></a><p className="sidebar-label">YOUR TRAINING SPACE</p><nav aria-label="Main navigation">{navigation.map(({ name, icon: Icon }) => <button key={name} className={`nav-item ${page === name ? 'active' : ''}`} aria-current={page === name ? 'page' : undefined} onClick={() => { setPage(name); setNotice(''); }}><Icon size={19}/><span>{name}</span>{page === name && <span className="nav-dot"/>}</button>)}</nav><div className="sidebar-bottom"><span className="avatar">TL</span><div><strong>Your workspace</strong><p>One rep at a time.</p></div></div></aside>
+    <aside className="sidebar"><a className="brand" href="#" onClick={e => { e.preventDefault(); setPage('Dashboard'); }}><span className="brand-icon"><Dumbbell size={24}/></span>form<span className="brand-dot">.</span></a><p className="sidebar-label">YOUR TRAINING SPACE</p><nav aria-label="Main navigation">{navigation.map(({ name, icon: Icon }) => <button key={name} className={`nav-item ${page === name ? 'active' : ''}`} aria-current={page === name ? 'page' : undefined} onClick={() => { setPage(name); setNotice(''); }}><Icon size={19}/><span>{name}</span>{page === name && <span className="nav-dot"/>}</button>)}</nav><div className="sidebar-bottom"><span className="avatar">{(user?.displayName || 'Guest').trim().split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span><div><strong>{user?.displayName || 'Guest workspace'}</strong><p>{guest ? 'Temporary visit' : 'One rep at a time.'}</p></div></div><button className="secondary logout-button" disabled={logoutBusy} onClick={guest ? onSignIn : onLogout}>{guest ? 'Log in / Register' : logoutBusy ? 'Logging out…' : 'Log out'}</button></aside>
     <main><header className="topbar"><span>Workspace <ChevronRight size={14}/> <strong>{page}</strong></span><span className="version">PERSONAL TRAINING / V.01</span></header>
       <div className="page-content"><div className="page-heading"><div><p className="eyebrow">LET’S BUILD SOMETHING STRONGER</p><h1>{page === 'Dashboard' ? 'Your training, in focus.' : page}</h1><p className="muted">{page === 'Dashboard' ? 'Make a plan. Show up. Keep getting better.' : page === 'Workout Plans' ? 'Your routines, ready for the next session.' : page === 'Schedule' ? 'Make room for your next workout.' : page === 'Progress' ? 'See how your training changes, one session at a time.' : page === 'Exercises' ? 'A shared catalog for consistent plans and progress.' : 'Your completed sessions, all in one place.'}</p></div>{['Dashboard', 'Workout Plans'].includes(page) && <button className="primary" onClick={() => setEditor({})}><Plus size={18}/>New plan</button>}</div>
+      {guest && <div className="guest-banner"><div><strong>Guest mode</strong><p>Plans and workouts are temporary and disappear when you refresh or leave. Log in or create an account to save your training.</p></div><button className="secondary" onClick={onSignIn}>Log in / Register</button></div>}
       {draftWarning && <p role="alert" className="error mb-4">{draftWarning}</p>}
       {draft && <div className="active-workout mb-5"><div><strong>Workout in progress</strong><p>{draft.planName}</p></div><button className="primary" onClick={() => setWorkoutOpen(true)}>Resume workout</button></div>}
+      {page === 'Dashboard' && <UpcomingWorkout entries={schedule} today={today} plans={plans} loading={scheduleLoading} error={scheduleError} onRetry={loadSchedule} onViewSchedule={() => setPage('Schedule')} onStart={startWorkout} onViewPlan={setScheduledPlanDetails} draft={draft}/>}
       {notice && <p className="notice" role="status"><Check size={16}/>{notice}</p>}
       {['Dashboard', 'Workout Plans'].includes(page) && <>
         {page === 'Dashboard' && <><section className="hero"><div className="hero-content"><span className="pill"><span/> CONSISTENCY STARTS HERE</span><h2>Small steps.<br/><em>Stronger you.</em></h2><p>Your next chapter starts with a plan.<br/>Build a routine that works for you.</p><button className="hero-button" onClick={() => setEditor({})}>Build your workout <ArrowUpRight size={18}/></button></div><div className="hero-art" aria-hidden="true"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><Dumbbell className="hero-dumbbell" strokeWidth={1}/><span className="art-label">PROGRESS IS A PRACTICE.</span></div></section>
-        <UpcomingWorkout entries={schedule} today={today} plans={plans} loading={scheduleLoading} error={scheduleError} onRetry={loadSchedule} onViewSchedule={() => setPage('Schedule')} onStart={startWorkout} onViewPlan={setScheduledPlanDetails} draft={draft}/>
         <section className="stats" aria-label="Training overview">{[{ label: 'Workout plans', value: loading || error ? '—' : String(plans.length).padStart(2, '0'), sub: 'Built around your goals', icon: ListChecks }, { label: 'Planned exercises', value: loading || error ? '—' : String(totalExercises).padStart(2, '0'), sub: 'Across all your routines', icon: Dumbbell }, { label: 'Completed workouts', value: workoutsLoading || workoutsError ? '—' : String(workouts.length).padStart(2, '0'), sub: workoutsError ? 'Open History to retry' : 'Every session counts', icon: Activity }].map(({ label, value, sub, icon: Icon }) => <article className="stat" key={label}><div className="flex justify-between"><span>{label}</span><Icon size={18}/></div><strong>{value}</strong><p>{sub}</p></article>)}</section></>}
         <section><div className="section-heading"><div><h2>Your workout plans <span className="count">{plans.length}</span></h2><p className="muted">A little structure. A lot of potential.</p></div>{page === 'Dashboard' && <button className="text-button" onClick={() => setPage('Workout Plans')}>View all <ChevronRight size={16}/></button>}</div>
           {error && <div className="error connection" role="alert"><div><strong>Unable to connect</strong><p>{error}</p></div><button className="secondary" onClick={load}><RefreshCw size={15}/>Retry</button></div>}
-          {loading ? <div className="empty" role="status">Loading your workout plans…</div> : plans.length ? <div className="plan-grid">{plans.map((plan, index) => <article className="plan-card" key={plan.id}><div className="flex justify-between items-center"><span className="plan-number">PLAN {String(index + 1).padStart(2, '0')}</span><Dumbbell size={20} className="lime"/></div><h3>{plan.name}</h3><p className="plan-description">{plan.description || 'Your next step toward a stronger routine.'}</p><div className="exercise-list">{plan.exercises.map((exercise, i) => <div key={i}><span>{exercise.name}</span><small>{exercise.targetSets} × {exercise.targetReps}</small></div>)}</div><div className="plan-footer"><button className="secondary" onClick={() => startWorkout(plan)}>{matchesWorkoutDraft(draft, plan.id) ? 'Resume workout' : 'Start workout'}</button><div className="flex gap-2"><button className="icon-button" aria-label={`Edit ${plan.name}`} onClick={() => setEditor({ plan })}><Pencil size={16}/></button><button className="icon-button" aria-label={`Delete ${plan.name}`} disabled={deleting === plan.id} onClick={() => remove(plan)}><Trash2 size={16}/></button></div></div></article>)}</div> : !error && <div className="empty"><span className="empty-icon"><Dumbbell size={27}/></span><h3>Your first plan starts here</h3><p>Add your exercises, sets and reps.<br/>Keep your next session one step closer.</p><button className="secondary" onClick={() => setEditor({})}><Plus size={16}/>Create a workout plan</button></div>}
+          {loading ? <div className="empty" role="status">Loading your workout plans…</div> : plans.length ? <div className="plan-grid">{plans.map((plan, index) => <article className="plan-card" key={plan.id}><div className="flex justify-between items-center"><span className="plan-number">PLAN {String(index + 1).padStart(2, '0')}</span><Dumbbell size={20} className="lime"/></div><h3>{plan.name}</h3><p className="plan-description">{plan.description || 'Your next step toward a stronger routine.'}</p><div className="exercise-list">{plan.exercises.map((exercise, i) => <div key={i}><span>{exercise.name}</span><small>{exercise.targetSets} × {exercise.targetReps}{exercise.restSeconds != null && <span className="plan-rest">{exercise.restSeconds}s rest</span>}</small></div>)}</div><div className="plan-footer"><button className="secondary" onClick={() => startWorkout(plan)}>{matchesWorkoutDraft(draft, plan.id) ? 'Resume workout' : 'Start workout'}</button><div className="flex gap-2"><button className="icon-button" aria-label={`Edit ${plan.name}`} onClick={() => setEditor({ plan })}><Pencil size={16}/></button><button className="icon-button" aria-label={`Delete ${plan.name}`} disabled={deleting === plan.id} onClick={() => remove(plan)}><Trash2 size={16}/></button></div></div></article>)}</div> : !error && <div className="empty"><span className="empty-icon"><Dumbbell size={27}/></span><h3>Your first plan starts here</h3><p>Add your exercises, sets and reps.<br/>Keep your next session one step closer.</p><button className="secondary" onClick={() => setEditor({})}><Plus size={16}/>Create a workout plan</button></div>}
         </section></>}
       {page === 'Schedule' && <WorkoutSchedule entries={schedule} plans={plans} today={today} loading={scheduleLoading} error={scheduleError} plansLoading={loading} plansError={error} onRetry={loadSchedule} onPlansRetry={load} onSave={saveSchedule} onDelete={removeSchedule} onStart={startWorkout} onViewPlans={() => setPage('Workout Plans')} onViewPlan={setScheduledPlanDetails} draft={draft}/>}
       {page === 'Exercises' && <ExerciseCatalog catalog={catalog} loading={catalogLoading} error={catalogError} onRetry={loadCatalog} onCreate={addExercise}/>}

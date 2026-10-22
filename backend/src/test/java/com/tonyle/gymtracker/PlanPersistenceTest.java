@@ -15,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
     "spring.datasource.username=sa", "spring.datasource.password=",
     "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-class PlanPersistenceTest {
+class PlanPersistenceTest extends AuthenticatedTest {
     @Autowired private PlanController controller;
 
     @Test void plansAndOrderedExercisesSurviveSeparateTransactions() {
         var request = new PlanRequest("Upper body", "Strength", List.of(
-            new PlanRequest.ExerciseRequest("Bench press", 3, 8),
+            new PlanRequest.ExerciseRequest("Bench press", 3, 8, null, 90),
             new PlanRequest.ExerciseRequest("Row", 4, 10)));
         var created = controller.create(request).getBody();
         assertNotNull(created);
@@ -30,15 +30,18 @@ class PlanPersistenceTest {
             // Each controller call opens a separate transaction and reloads from the database.
             var loaded = controller.get(id);
             assertEquals("Upper body", loaded.name());
+            assertEquals(90, loaded.exercises().getFirst().restSeconds());
+            assertNull(loaded.exercises().get(1).restSeconds());
             assertEquals(List.of("Bench press", "Row"), loaded.exercises().stream().map(PlanResponse.ExerciseResponse::name).toList());
             assertTrue(controller.all().stream().anyMatch(plan -> plan.id().equals(id)));
 
-            controller.update(id, new PlanRequest("Leg day", "", List.of(new PlanRequest.ExerciseRequest("Squat", 5, 5))));
+            controller.update(id, new PlanRequest("Leg day", "", List.of(new PlanRequest.ExerciseRequest("Squat", 5, 5, null, 0))));
             var updated = controller.get(id);
             assertEquals("Leg day", updated.name());
             assertEquals(1, updated.exercises().size());
             assertEquals("Squat", updated.exercises().getFirst().name());
             assertEquals(5, updated.exercises().getFirst().targetSets());
+            assertEquals(0, updated.exercises().getFirst().restSeconds());
         } finally {
             controller.delete(id);
         }

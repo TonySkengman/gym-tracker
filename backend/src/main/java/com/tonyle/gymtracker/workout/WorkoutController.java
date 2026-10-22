@@ -1,5 +1,7 @@
 package com.tonyle.gymtracker.workout;
 
+import com.tonyle.gymtracker.auth.CurrentUser;
+import com.tonyle.gymtracker.plan.PlanRepository;
 import jakarta.validation.Valid;
 import com.tonyle.gymtracker.exercise.ExerciseCatalog;
 import com.tonyle.gymtracker.schedule.ScheduleService;
@@ -19,19 +21,23 @@ public class WorkoutController {
     private final WorkoutRepository repository;
     private final ExerciseCatalog catalog;
     private final ScheduleService schedule;
-    public WorkoutController(WorkoutRepository repository, ExerciseCatalog catalog, ScheduleService schedule) { this.repository = repository; this.catalog = catalog; this.schedule = schedule; }
+    private final PlanRepository plans;
+    public WorkoutController(WorkoutRepository repository, ExerciseCatalog catalog, ScheduleService schedule, PlanRepository plans) { this.repository = repository; this.catalog = catalog; this.schedule = schedule; this.plans = plans; }
 
     @GetMapping public List<WorkoutResponse> all() {
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "completedAt")).stream().map(WorkoutResponse::from).toList();
+        return repository.findByOwnerId(CurrentUser.id(), Sort.by(Sort.Direction.DESC, "completedAt")).stream().map(WorkoutResponse::from).toList();
     }
     @GetMapping("/{id}") public WorkoutResponse get(@PathVariable UUID id) {
         return WorkoutResponse.from(find(id));
     }
     @PostMapping public ResponseEntity<WorkoutResponse> complete(@Valid @RequestBody WorkoutRequest request) {
         var existing = repository.findById(request.id());
-        if (existing.isPresent()) return ResponseEntity.ok(WorkoutResponse.from(existing.get()));
+        if (existing.isPresent()) { CurrentUser.requireOwner(existing.get().getOwnerId()); return ResponseEntity.ok(WorkoutResponse.from(existing.get())); }
+        // A deleted source plan can still have an in-progress draft, but another user's plan cannot be used.
+        plans.findById(request.planId()).ifPresent(plan -> CurrentUser.requireOwner(plan.getOwnerId()));
         // Store a snapshot: changing or deleting a plan must not rewrite workout history.
-        var session = repository.save(new WorkoutSession(resolve(request)));
+        var session = new WorkoutSession(resolve(request)); session.assignOwner(CurrentUser.id());
+        session = repository.save(session);
         schedule.complete(request.scheduleId(), request.planId(), session.getId());
         return ResponseEntity.created(URI.create("/api/workouts/" + session.getId())).body(WorkoutResponse.from(session));
     }
@@ -43,7 +49,7 @@ public class WorkoutController {
     @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) { var session = find(id); schedule.reopen(id); repository.delete(session); }
     private WorkoutSession find(UUID id) {
-        return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
+        return repository.findById(id).filter(session -> CurrentUser.id().equals(session.getOwnerId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
     }
     private WorkoutRequest resolve(WorkoutRequest request) {
         return new WorkoutRequest(request.id(), request.planId(), request.planName(), request.startedAt(), request.exercises().stream().map(item -> {
