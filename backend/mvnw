@@ -1,0 +1,22 @@
+#!/bin/sh
+# Workspace-local Maven bootstrap. Requires Java and curl (or an existing Maven).
+set -eu
+BASE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -z "${JAVA_HOME:-}" ] && [ "$(uname)" = Darwin ]; then
+  JAVA_HOME=$(/usr/libexec/java_home -v 21)
+  export JAVA_HOME
+fi
+if [ -n "${JAVA_HOME:-}" ]; then PATH="$JAVA_HOME/bin:$PATH"; export PATH; fi
+MAVEN="$BASE/.tools/apache-maven-3.9.11/bin/mvn"
+if [ ! -x "$MAVEN" ]; then
+  if command -v mvn >/dev/null 2>&1; then
+    exec mvn -f "$BASE/pom.xml" "-Dmaven.repo.local=$BASE/.cache/repository" "$@"
+  fi
+  mkdir -p "$BASE/.tools"
+  URL=$(sed -n 's/^distributionUrl=//p' "$BASE/.mvn/wrapper/maven-wrapper.properties")
+  echo "Downloading Maven into backend/.tools (first run only)..."
+  curl --fail --location --connect-timeout 15 "$URL" -o "$BASE/.tools/maven.tar.gz"
+  tar -xzf "$BASE/.tools/maven.tar.gz" -C "$BASE/.tools"
+  rm "$BASE/.tools/maven.tar.gz"
+fi
+exec "$MAVEN" -f "$BASE/pom.xml" "-Dmaven.repo.local=$BASE/.cache/repository" "$@"
