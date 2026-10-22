@@ -17,7 +17,8 @@ public class SecurityConfig {
         return http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/csrf", "/api/auth/register", "/api/auth/login", "/error").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll())
             .securityContext(context -> context.securityContextRepository(contexts))
             .requestCache(cache -> cache.disable())
             .exceptionHandling(errors -> errors

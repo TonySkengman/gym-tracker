@@ -55,6 +55,13 @@ class AuthApiTest {
             csrf();
         }
     }
+    @Test void publicAssetsRemainAccessibleWhileAccountDataRequiresLogin() throws Exception {
+        mvc.perform(get("/deployment-check.txt")).andExpect(status().isOk())
+            .andExpect(content().string("Public asset verification\n"));
+        for (String path : new String[] {"/api/plans", "/api/workouts", "/api/schedule", "/api/auth/me"})
+            mvc.perform(get(path)).andExpect(status().isUnauthorized());
+    }
+
     @Test void realSecurityChainProtectsSessionsAndIsolatesAllAccountData() throws Exception {
         mvc.perform(get("/api/plans")).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content("{}"))
