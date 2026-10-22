@@ -2,6 +2,7 @@ package com.tonyle.gymtracker.workout;
 
 import jakarta.validation.Valid;
 import com.tonyle.gymtracker.exercise.ExerciseCatalog;
+import com.tonyle.gymtracker.schedule.ScheduleService;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,8 @@ import java.util.UUID;
 public class WorkoutController {
     private final WorkoutRepository repository;
     private final ExerciseCatalog catalog;
-    public WorkoutController(WorkoutRepository repository, ExerciseCatalog catalog) { this.repository = repository; this.catalog = catalog; }
+    private final ScheduleService schedule;
+    public WorkoutController(WorkoutRepository repository, ExerciseCatalog catalog, ScheduleService schedule) { this.repository = repository; this.catalog = catalog; this.schedule = schedule; }
 
     @GetMapping public List<WorkoutResponse> all() {
         return repository.findAll(Sort.by(Sort.Direction.DESC, "completedAt")).stream().map(WorkoutResponse::from).toList();
@@ -30,6 +32,7 @@ public class WorkoutController {
         if (existing.isPresent()) return ResponseEntity.ok(WorkoutResponse.from(existing.get()));
         // Store a snapshot: changing or deleting a plan must not rewrite workout history.
         var session = repository.save(new WorkoutSession(resolve(request)));
+        schedule.complete(request.scheduleId(), request.planId(), session.getId());
         return ResponseEntity.created(URI.create("/api/workouts/" + session.getId())).body(WorkoutResponse.from(session));
     }
     @PutMapping("/{id}") public WorkoutResponse update(@PathVariable UUID id, @Valid @RequestBody WorkoutRequest request) {
@@ -38,7 +41,7 @@ public class WorkoutController {
         return WorkoutResponse.from(session);
     }
     @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) { repository.delete(find(id)); }
+    public void delete(@PathVariable UUID id) { var session = find(id); schedule.reopen(id); repository.delete(session); }
     private WorkoutSession find(UUID id) {
         return repository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout not found"));
     }
@@ -46,6 +49,6 @@ public class WorkoutController {
         return new WorkoutRequest(request.id(), request.planId(), request.planName(), request.startedAt(), request.exercises().stream().map(item -> {
             var exercise = catalog.resolve(item.exerciseId(), item.name());
             return new WorkoutRequest.ExerciseRequest(exercise.getName(), item.targetReps(), item.sets(), exercise.getId(), item.skipped());
-        }).toList());
+        }).toList(), request.scheduleId());
     }
 }

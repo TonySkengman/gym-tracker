@@ -10,7 +10,7 @@ export function workoutPayload(draft) {
   if (performed.some(exercise => !exercise.sets.length || exercise.sets.some(set => String(set.weight).trim() === '' || String(set.reps).trim() === ''))) {
     throw new Error('Enter weight and reps for every recorded set, or skip the exercise. Use 0 kg for bodyweight exercises.');
   }
-  return { id: draft.id, planId: draft.planId, planName: draft.planName, startedAt: draft.startedAt,
+  return { id: draft.id, planId: draft.planId, planName: draft.planName, startedAt: draft.startedAt, scheduleId: draft.scheduleId,
     exercises: draft.exercises.map(exercise => ({ name: exercise.name, exerciseId: exercise.exerciseId, targetReps: exercise.targetReps, skipped: Boolean(exercise.skipped), sets: exercise.skipped ? [] : exercise.sets.map(set => ({ weight: Number(set.weight), reps: Number(set.reps) })) })) };
 }
 async function saveWorkout(draft, path, method) { return request({ method, body: JSON.stringify(workoutPayload(draft)) }, path); }
@@ -49,4 +49,9 @@ export function workoutToDraft(workout) {
   const performed = groupWorkoutSets(workout.sets).map(exercise => ({ ...exercise, skipped: false, targetSets: exercise.sets.length, sets: exercise.sets.map(set => ({ weight: String(set.weight), reps: String(set.reps) })) }));
   const skipped = (workout.skippedExercises || []).map(exercise => ({ name: exercise.exerciseName, exerciseId: exercise.exerciseId, exerciseNumber: exercise.exerciseNumber, targetReps: exercise.targetReps, targetSets: 1, skipped: true, sets: [{ weight: '', reps: '' }] }));
   return { id: workout.id, planId: workout.planId, planName: workout.planName, startedAt: workout.startedAt, exercises: [...performed, ...skipped].sort((a, b) => a.exerciseNumber - b.exerciseNumber) };
+}
+
+// Plan cards can resume that plan; calendar actions must match the exact booking.
+export function matchesWorkoutDraft(draft, planId, scheduleId = null) {
+  return Boolean(draft && draft.planId === planId && (scheduleId == null || draft.scheduleId === scheduleId));
 }

@@ -4,6 +4,7 @@ import com.tonyle.gymtracker.plan.ApiErrors;
 import com.tonyle.gymtracker.workout.*;
 import org.junit.jupiter.api.*;
 import com.tonyle.gymtracker.exercise.*;
+import com.tonyle.gymtracker.schedule.*;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.http.MediaType;
@@ -25,7 +26,7 @@ class WorkoutControllerTest {
         var exerciseRepository = mock(ExerciseRepository.class);
         when(exerciseRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         var catalog = new ExerciseCatalog(exerciseRepository);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository, catalog)).setControllerAdvice(new ApiErrors()).build();
+        mvc = MockMvcBuilders.standaloneSetup(new WorkoutController(repository, catalog, new ScheduleService(mock(ScheduleRepository.class)))).setControllerAdvice(new ApiErrors()).build();
     }
     @Test void completesWorkoutAndReturnsSnapshot() throws Exception {
         when(repository.findById(any())).thenReturn(Optional.empty());

@@ -1,6 +1,6 @@
 # Form — Gym Tracker
 
-A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. The Progress page charts heaviest weight and training volume for each exercise.
+A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. The Progress page charts heaviest weight and training volume for each exercise. A Schedule calendar assigns saved plans to dates and shows the next upcoming workout on the dashboard.
 
 ## Stack
 
@@ -52,6 +52,21 @@ The standard Apache Maven Wrapper is included for macOS/Linux (`mvnw`) and Windo
 You can minimize the workout and navigate elsewhere. **Resume workout** returns to the same session. An unfinished workout is stored in this browser's local storage and survives refreshes; it is not synced to the server or other devices. Private browsing or clearing browser data can remove drafts. Completed workouts are stored in the database. **Discard workout** asks before clearing a draft.
 
 Saved sessions contain a snapshot of the plan and sets. Editing or deleting the original plan leaves history intact. A stable session UUID makes sequential retries return the original saved workout rather than add a duplicate. In **History**, the pencil button opens the session editor so you can correct weights/reps, change the set count or mark an exercise skipped. Saving updates Progress immediately while preserving the original workout date and duration. The trash button asks for confirmation before deleting the session and its recorded/skipped exercise rows; Progress and completed-workout totals update too. Unsaved history edits are not stored in the browser draft.
+
+## Schedule workouts
+
+Open **Schedule** to use the Monday-first month calendar. Select a day and click **Add workout**, choose a saved plan, and save. You can schedule different plans on the same day. A plan can only be assigned once per date; duplicate bookings return an error instead of appearing twice. Use the month arrows or **Today** to navigate. Each date shows scheduled-workout markers; the selected-day list shows full names and completion status. Click a workout marker/name in the calendar, the selected-day list or the Next workout card to open its plan details, including description, exercise order, target sets and target reps. The detail view shows the current saved plan, not the actual results from a completed session, and can start an uncompleted scheduled workout. Deleted plans show an unavailable message instead of invented details.
+
+The **Next workout** card on both Schedule and Dashboard selects the earliest uncompleted booking on or after today. Same-day entries use the order they were added. Completed entries, past dates and deleted plans are excluded. Scheduling is date-only, without times or recurring bookings. Dates use the browser's local calendar rather than UTC timestamps, and the upcoming calculation checks for a new local date once per minute while the app is open.
+
+- Start using the scheduled entry's **Start workout** button. The browser draft keeps a `scheduleId`, and saving the session marks that entry complete in the same backend transaction. An unrelated workout started from a plan card is not automatically matched to a calendar entry.
+- The pencil button can move an uncompleted entry or assign another saved plan. Completed entries cannot be rescheduled; add a new booking instead.
+- Removing a booking asks for confirmation and leaves completed History and Progress data intact.
+- Deleting a completed workout from History reopens its linked booking. A past booking stays on the calendar but is not treated as upcoming.
+- If a source plan is deleted, its booking stays visible by its saved name. It cannot be started or selected as the next workout until reassigned to an existing plan.
+- If a booking was removed or reassigned while a draft workout was in progress, the workout still saves, without completing another plan's booking.
+
+Restart the backend after updating so Hibernate can add `scheduled_workouts`. Existing plans and workout history are preserved.
 
 ## Exercise catalog
 
@@ -179,6 +194,17 @@ Example completion payload (use a new UUID for each workout):
 
 Completion time is set on the server on creation and preserved on updates. The body UUID must match the URL for PUT. Weight allows 0–2000 kg and up to two decimal places; actual reps must be integers from 1–100. Exercise names and targets are stored as a snapshot, with no foreign-key dependency on the source plan. Responses include an ordered flat list of recorded sets with exercise IDs and exercise/set numbers, plus a separate `skippedExercises` array. Repeated exercise occurrences remain separate in History. For a skipped exercise, send `skipped: true` and `sets: []`; performed exercises require at least one set. The server rejects sessions where everything is skipped. `exerciseId` is optional for backward compatibility; supplying it selects the canonical catalog exercise.
 
+### Schedule endpoints
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| GET | `/api/schedule` | All entries ordered by date and ID |
+| POST | `/api/schedule` | Assign `{ "planId": 1, "date": "2026-10-25" }`; returns 201 |
+| PUT | `/api/schedule/{id}` | Change the date or plan of an uncompleted booking |
+| DELETE | `/api/schedule/{id}` | Remove only the calendar entry; returns 204 |
+
+Responses include `id`, `planId`, `planName`, a date-only `date`, `planAvailable`, and nullable `completedWorkoutId`. Plan existence and dates are validated on the server. Duplicate plan/date combinations return 409. `scheduleId` is optional in workout completion payloads; old clients and unscheduled sessions still work.
+
 ### Catalog endpoints
 
 | Method | Path | Behavior |
@@ -206,8 +232,8 @@ Backend controller tests use a mocked repository and cover create responses, inv
 
 ### Verification status
 
-- Frontend: all 19 catalog/API-service/draft/progress tests and the production build pass. Progress date-boundary tests also pass in Europe/Stockholm and America/Los_Angeles. Browser checks covered real-data charts on desktop and a 390 px mobile viewport, exercise selection, date-range empty/error states and filter reset. Earlier checks covered starting, minimizing, restoring after refresh and discarding a draft.
-- Backend: Java 21 compilation, all 15 tests, and executable JAR packaging pass (`./mvnw verify`). Tests cover validation, session persistence, ordering, duplicate retries, stable catalog identities and backfill, skip storage, edits that preserve timestamps, deletion cleanup and history surviving source-plan deletion. Full HTTP conversion/validation is exercised against real JPA through MockMvc without opening a network port.
+- Frontend: all 25 catalog/API-service/draft/progress/schedule tests and the production build pass. Progress and schedule date-boundary tests also pass in Europe/Stockholm and America/Los_Angeles. Schedule tests include leap years, Monday-first month padding, DST and upcoming selection. Static server rendering verified 42 calendar dates and selected-day actions. Browser automation was unavailable for the Schedule milestone, so its final visual and PostgreSQL flow still need a manual check. Browser checks covered real-data charts on desktop and a 390 px mobile viewport, exercise selection, date-range empty/error states and filter reset. Earlier checks covered starting, minimizing, restoring after refresh and discarding a draft.
+- Backend: Java 21 compilation, all 20 tests, and executable JAR packaging pass (`./mvnw verify`). Tests cover validation, session persistence, ordering, duplicate retries, stable catalog identities and backfill, skip storage, edits that preserve timestamps, deletion cleanup and history surviving source-plan deletion. Full HTTP conversion/validation is exercised against real JPA through MockMvc without opening a network port. Schedule tests cover creation, sorting, rescheduling, duplicate/invalid bookings, completion links, reopening after session deletion, and preserving entries/history when their source records are removed.
 - Standard Apache Maven Wrapper 3.3.4 runs Maven 3.9.11 successfully.
 - Docker Compose configuration validates.
 - The running local REST API passed create, read, list, update, validation and delete checks. The disposable verification plan was removed; existing plans were preserved.
@@ -240,3 +266,7 @@ To check PostgreSQL restart persistence, create a disposable plan in the app, ru
 ## Manual check after this milestone
 
 Restart the backend and refresh the frontend. Check that existing plans and History still appear. In a temporary plan/session: choose a catalog exercise, create a custom exercise, add/remove a set, skip another exercise, finish the workout, edit a weight in History and verify Progress changes. Delete the temporary workout with confirmation and verify its chart point/count disappears. Do not use real sessions for disposable verification.
+
+### Manual Schedule check
+
+Restart the backend, refresh the app, then open **Schedule**. Add a temporary booking for today and a different plan tomorrow. Verify Dashboard shows today's booking first. Start and finish the first workout from the calendar, then verify the completed marker and next workout change. Delete that disposable session to check the booking reopens; remove the temporary bookings afterward. Also check month navigation and the calendar layout on your phone.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completeWorkout, createWorkoutDraft, DRAFT_KEY, getWorkouts, groupWorkoutSets, readWorkoutDraft } from './workouts.js';
+import { matchesWorkoutDraft, completeWorkout, createWorkoutDraft, DRAFT_KEY, getWorkouts, groupWorkoutSets, readWorkoutDraft } from './workouts.js';
 
 test('draft copies plan targets without sharing mutable set inputs', () => {
   const plan = { id: 7, name: 'Upper', exercises: [{ name: 'Press', targetSets: 2, targetReps: 8 }] };
@@ -85,4 +85,15 @@ test('history editing reconstructs skipped exercises and sends PUT; deletion acc
     await updateWorkout(draft); assert.equal(calls[0].method, 'PUT'); assert.equal(calls[0].url, '/api/workouts/session-1');
     assert.equal(await deleteWorkout(saved.id), null); assert.equal(calls[1].method, 'DELETE');
   } finally { globalThis.fetch = original; }
+});
+
+test('resume matches the active plan and exact calendar booking', () => {
+  const draft = { planId: 7, scheduleId: 12 };
+  assert.equal(matchesWorkoutDraft(null, 7), false);
+  assert.equal(matchesWorkoutDraft(draft, 7), true);
+  assert.equal(matchesWorkoutDraft(draft, 8), false);
+  assert.equal(matchesWorkoutDraft(draft, 7, 12), true);
+  assert.equal(matchesWorkoutDraft(draft, 7, 13), false);
+  assert.equal(matchesWorkoutDraft(draft, 8, 12), false);
+  assert.equal(matchesWorkoutDraft({ planId: 7 }, 7, 12), false);
 });

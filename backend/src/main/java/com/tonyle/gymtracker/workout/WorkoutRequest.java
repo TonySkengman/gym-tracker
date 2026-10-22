@@ -12,8 +12,12 @@ public record WorkoutRequest(
     @NotNull @Positive Long planId,
     @NotBlank @Size(max = 100) String planName,
     @NotNull @PastOrPresent Instant startedAt,
-    @NotNull @Size(min = 1, max = 50) List<@NotNull @Valid ExerciseRequest> exercises
+    @NotNull @Size(min = 1, max = 50) List<@NotNull @Valid ExerciseRequest> exercises,
+    @Positive Long scheduleId
 ) {
+    public WorkoutRequest(UUID id, Long planId, String planName, Instant startedAt, List<ExerciseRequest> exercises) {
+        this(id, planId, planName, startedAt, exercises, null);
+    }
     @AssertTrue(message = "Record at least one set before saving a workout")
     public boolean isRecordedSetPresent() {
         return exercises == null || exercises.stream().anyMatch(exercise -> exercise != null && !exercise.skipped() && exercise.sets() != null && !exercise.sets().isEmpty());
