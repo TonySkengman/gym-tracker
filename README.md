@@ -1,6 +1,6 @@
 # Form — Gym Tracker
 
-A full-stack gym workout planning app built as a portfolio project. Create routines, add exercises with target sets and reps, and edit or delete your plans. The responsive dark dashboard uses live plan totals. History and Progress are clearly marked as future milestones; no workout statistics are fabricated.
+A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. Progress charts remain a future milestone.
 
 ## Stack
 
@@ -36,9 +36,22 @@ npm ci --cache .cache/npm
 npm run dev
 ```
 
+After pulling backend changes, stop the old backend process with Ctrl+C and start it again; it does not reload Java changes automatically. Hibernate creates the new session tables without removing existing plans.
+
 Open http://localhost:5173. The API runs at http://localhost:8080/api/plans. Vite proxies `/api` to the backend, so no CORS configuration is needed in development. The first page load should show an empty plan list. Click **New plan**, add exercises, save, and refresh to check database persistence.
 
 The standard Apache Maven Wrapper is included for macOS/Linux (`mvnw`) and Windows (`mvnw.cmd`). It downloads Maven 3.9.11 on first use. Select a Java 21 JDK with `JAVA_HOME`; the wrapper does not select a JDK for you. Check the active versions with `./mvnw -v`.
+
+## Log a workout
+
+1. Click **Start workout** on a saved plan.
+2. Enter weight in kilograms and actual reps for every planned set. Use `0` kg for bodyweight/no added weight. All sets require entries; skipping or adding sets is reserved for a later improvement.
+3. Click **Finish workout**. After the server confirms the save, the app opens **History**.
+4. Expand a completed session to see its exercises, weights and reps. The dashboard completed-workout count updates too.
+
+You can minimize the workout and navigate elsewhere. **Resume workout** returns to the same session. An unfinished workout is stored in this browser's local storage and survives refreshes; it is not synced to the server or other devices. Private browsing or clearing browser data can remove drafts. Completed workouts are stored in the database. **Discard workout** asks before clearing a draft.
+
+Saved sessions contain a snapshot of the plan and sets. Editing or deleting the original plan leaves history intact. A stable session UUID makes sequential retries return the original saved workout rather than add a duplicate. History is read-only in this milestone; session editing and deletion are not yet implemented.
 
 ## Configuration
 
@@ -115,6 +128,33 @@ Create/update payload:
 
 Names are required (100 characters maximum), descriptions allow 500 characters, and each plan requires 1–50 exercises. Sets must be 1–50; reps must be 1–100. Validation runs on the backend as well as the form. The UI reports server failures and never pretends a failed save was persisted. There is no local-storage fallback.
 
+### Workout endpoints
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| GET | `/api/workouts` | Completed sessions, newest first |
+| GET | `/api/workouts/{uuid}` | One saved session, or 404 |
+| POST | `/api/workouts` | Complete a session; 201 for a new UUID, 200 for a previously saved UUID |
+
+Example completion payload (use a new UUID for each workout):
+
+```json
+{
+  "id": "4b6ca5aa-e309-4cff-94d3-d1e1e7519669",
+  "planId": 1,
+  "planName": "Upper body",
+  "startedAt": "2026-01-01T10:00:00Z",
+  "exercises": [
+    { "name": "Bench press", "targetReps": 8, "sets": [
+      { "weight": 12.5, "reps": 8 },
+      { "weight": 12.5, "reps": 6 }
+    ] }
+  ]
+}
+```
+
+Completion time is set on the server. Weight allows 0–2000 kg and up to two decimal places; actual reps must be integers from 1–100. Exercise names and targets are stored as a snapshot, with no foreign-key dependency on the source plan. Responses include an ordered flat list of sets with exercise and set numbers; repeated exercise names remain separate groups in History.
+
 ## Checks
 
 ```sh
@@ -133,14 +173,14 @@ Backend controller tests use a mocked repository and cover create responses, inv
 
 ### Verification status
 
-- Frontend: both API-service tests and the production build pass.
-- Backend: Java 21 compilation, all five tests, and executable JAR packaging pass (`./mvnw verify`).
+- Frontend: all eight API-service/draft tests and the production build pass. Browser verification covered starting, minimizing, restoring after refresh, and discarding a draft.
+- Backend: Java 21 compilation, all nine tests, and executable JAR packaging pass (`./mvnw verify`). Workout tests cover validation, session persistence, ordering, duplicate retries and history surviving source-plan deletion.
 - Standard Apache Maven Wrapper 3.3.4 runs Maven 3.9.11 successfully.
 - Docker Compose configuration validates.
 - The running local REST API passed create, read, list, update, validation and delete checks. The disposable verification plan was removed; existing plans were preserved.
 - The running frontend is reachable at localhost:5173.
-- Docker socket access is denied in the agent environment, so container health and PostgreSQL restart durability still need checking from your own terminal. H2 testing does not establish PostgreSQL-specific compatibility.
-- Local `.git` writes remain denied in the agent environment. Commits can be saved directly to GitHub through the connected integration, but the local folder must be connected separately.
+- Docker socket access is denied in the agent environment. H2 testing does not establish PostgreSQL-specific compatibility. New workout endpoints still need an end-to-end PostgreSQL check after restarting the backend; starting a separate Java HTTP server for that check was blocked by sandbox socket permissions.
+- Local Git setup and PostgreSQL restart durability were subsequently verified by the project owner. Agent writes to `.git` remain restricted; direct GitHub commits do not update the local Git index or branch.
 
 ### Connect this existing folder to GitHub
 
@@ -159,7 +199,7 @@ To check PostgreSQL restart persistence, create a disposable plan in the app, ru
 
 ## Next milestones
 
-1. Log workout sessions with actual weights, sets and reps.
-2. Add session history and exercise progress charts using Recharts.
+1. Add exercise progress charts using Recharts.
+2. Support adding/skipping sets and editing completed sessions.
 3. Add authentication and associate plans and sessions with users.
 4. Add database migrations and PostgreSQL-specific integration tests.
