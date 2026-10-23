@@ -1,52 +1,490 @@
 [
-  "Bench press",
-  "Dumbbell press",
-  "Incline dumbbell press",
-  "Squat",
-  "Deadlift",
-  "Barbell row",
-  "Lat pulldown",
-  "Pull-up",
-  "Shoulder press",
-  "Biceps curl",
-  "Triceps pushdown",
-  "Leg press",
-  "Incline bench press",
-  "Chest press machine",
-  "Cable fly",
-  "Pec deck",
-  "Push-up",
-  "Chest dip",
-  "Seated cable row",
-  "Dumbbell row",
-  "Chest-supported row",
-  "Chin-up",
-  "Straight-arm pulldown",
-  "Face pull",
-  "Back extension",
-  "Dumbbell shoulder press",
-  "Lateral raise",
-  "Reverse pec deck",
-  "Rear delt fly",
-  "Dumbbell shrug",
-  "Hammer curl",
-  "Preacher curl",
-  "Cable curl",
-  "Incline dumbbell curl",
-  "Overhead triceps extension",
-  "Skull crusher",
-  "Close-grip bench press",
-  "Romanian deadlift",
-  "Sumo deadlift",
-  "Front squat",
-  "Goblet squat",
-  "Hack squat",
-  "Bulgarian split squat",
-  "Walking lunge",
-  "Leg extension",
-  "Seated leg curl",
-  "Lying leg curl",
-  "Hip thrust",
-  "Standing calf raise",
-  "Cable crunch"
+  {
+    "name": "Bench press",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Triceps",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Dumbbell press",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Triceps",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Incline dumbbell press",
+    "primaryMuscles": [
+      "Upper chest"
+    ],
+    "secondaryMuscles": [
+      "Front delts",
+      "Triceps"
+    ]
+  },
+  {
+    "name": "Squat",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Deadlift",
+    "primaryMuscles": [
+      "Glutes",
+      "Spinal erectors"
+    ],
+    "secondaryMuscles": [
+      "Quads",
+      "Hamstrings",
+      "Traps",
+      "Forearms"
+    ]
+  },
+  {
+    "name": "Barbell row",
+    "primaryMuscles": [
+      "Lats",
+      "Mid-back"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear delts"
+    ]
+  },
+  {
+    "name": "Lat pulldown",
+    "primaryMuscles": [
+      "Lats"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Mid-back"
+    ]
+  },
+  {
+    "name": "Pull-up",
+    "primaryMuscles": [
+      "Lats"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Mid-back"
+    ]
+  },
+  {
+    "name": "Shoulder press",
+    "primaryMuscles": [
+      "Front delts",
+      "Side delts"
+    ],
+    "secondaryMuscles": [
+      "Triceps"
+    ]
+  },
+  {
+    "name": "Biceps curl",
+    "primaryMuscles": [
+      "Biceps"
+    ],
+    "secondaryMuscles": [
+      "Brachialis",
+      "Brachioradialis"
+    ]
+  },
+  {
+    "name": "Triceps pushdown",
+    "primaryMuscles": [
+      "Triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "name": "Leg press",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Incline bench press",
+    "primaryMuscles": [
+      "Upper chest"
+    ],
+    "secondaryMuscles": [
+      "Front delts",
+      "Triceps"
+    ]
+  },
+  {
+    "name": "Chest press machine",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Triceps",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Cable fly",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Pec deck",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Push-up",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Triceps",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Chest dip",
+    "primaryMuscles": [
+      "Chest"
+    ],
+    "secondaryMuscles": [
+      "Triceps",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Seated cable row",
+    "primaryMuscles": [
+      "Lats",
+      "Mid-back"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear delts"
+    ]
+  },
+  {
+    "name": "Dumbbell row",
+    "primaryMuscles": [
+      "Lats",
+      "Mid-back"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear delts"
+    ]
+  },
+  {
+    "name": "Chest-supported row",
+    "primaryMuscles": [
+      "Lats",
+      "Mid-back"
+    ],
+    "secondaryMuscles": [
+      "Biceps",
+      "Rear delts"
+    ]
+  },
+  {
+    "name": "Chin-up",
+    "primaryMuscles": [
+      "Lats",
+      "Biceps"
+    ],
+    "secondaryMuscles": [
+      "Mid-back",
+      "Forearms"
+    ]
+  },
+  {
+    "name": "Straight-arm pulldown",
+    "primaryMuscles": [
+      "Lats"
+    ],
+    "secondaryMuscles": [
+      "Teres major",
+      "Triceps"
+    ]
+  },
+  {
+    "name": "Face pull",
+    "primaryMuscles": [
+      "Rear delts",
+      "Mid-back"
+    ],
+    "secondaryMuscles": [
+      "Rotator cuff"
+    ]
+  },
+  {
+    "name": "Back extension",
+    "primaryMuscles": [
+      "Spinal erectors"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Hamstrings"
+    ]
+  },
+  {
+    "name": "Dumbbell shoulder press",
+    "primaryMuscles": [
+      "Front delts",
+      "Side delts"
+    ],
+    "secondaryMuscles": [
+      "Triceps"
+    ]
+  },
+  {
+    "name": "Lateral raise",
+    "primaryMuscles": [
+      "Side delts"
+    ],
+    "secondaryMuscles": [
+      "Upper traps"
+    ]
+  },
+  {
+    "name": "Reverse pec deck",
+    "primaryMuscles": [
+      "Rear delts"
+    ],
+    "secondaryMuscles": [
+      "Mid-back"
+    ]
+  },
+  {
+    "name": "Rear delt fly",
+    "primaryMuscles": [
+      "Rear delts"
+    ],
+    "secondaryMuscles": [
+      "Mid-back"
+    ]
+  },
+  {
+    "name": "Dumbbell shrug",
+    "primaryMuscles": [
+      "Upper traps"
+    ],
+    "secondaryMuscles": [
+      "Forearms"
+    ]
+  },
+  {
+    "name": "Hammer curl",
+    "primaryMuscles": [
+      "Brachialis",
+      "Brachioradialis"
+    ],
+    "secondaryMuscles": [
+      "Biceps"
+    ]
+  },
+  {
+    "name": "Preacher curl",
+    "primaryMuscles": [
+      "Biceps"
+    ],
+    "secondaryMuscles": [
+      "Brachialis",
+      "Brachioradialis"
+    ]
+  },
+  {
+    "name": "Cable curl",
+    "primaryMuscles": [
+      "Biceps"
+    ],
+    "secondaryMuscles": [
+      "Brachialis",
+      "Brachioradialis"
+    ]
+  },
+  {
+    "name": "Incline dumbbell curl",
+    "primaryMuscles": [
+      "Biceps"
+    ],
+    "secondaryMuscles": [
+      "Brachialis",
+      "Brachioradialis"
+    ]
+  },
+  {
+    "name": "Overhead triceps extension",
+    "primaryMuscles": [
+      "Triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "name": "Skull crusher",
+    "primaryMuscles": [
+      "Triceps"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "name": "Close-grip bench press",
+    "primaryMuscles": [
+      "Triceps"
+    ],
+    "secondaryMuscles": [
+      "Chest",
+      "Front delts"
+    ]
+  },
+  {
+    "name": "Romanian deadlift",
+    "primaryMuscles": [
+      "Hamstrings",
+      "Glutes"
+    ],
+    "secondaryMuscles": [
+      "Spinal erectors",
+      "Forearms"
+    ]
+  },
+  {
+    "name": "Sumo deadlift",
+    "primaryMuscles": [
+      "Glutes",
+      "Quads",
+      "Adductors"
+    ],
+    "secondaryMuscles": [
+      "Spinal erectors",
+      "Hamstrings",
+      "Forearms"
+    ]
+  },
+  {
+    "name": "Front squat",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Goblet squat",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Hack squat",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": [
+      "Glutes",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Bulgarian split squat",
+    "primaryMuscles": [
+      "Quads",
+      "Glutes"
+    ],
+    "secondaryMuscles": [
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Walking lunge",
+    "primaryMuscles": [
+      "Quads",
+      "Glutes"
+    ],
+    "secondaryMuscles": [
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Leg extension",
+    "primaryMuscles": [
+      "Quads"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "name": "Seated leg curl",
+    "primaryMuscles": [
+      "Hamstrings"
+    ],
+    "secondaryMuscles": [
+      "Calves"
+    ]
+  },
+  {
+    "name": "Lying leg curl",
+    "primaryMuscles": [
+      "Hamstrings"
+    ],
+    "secondaryMuscles": [
+      "Calves"
+    ]
+  },
+  {
+    "name": "Hip thrust",
+    "primaryMuscles": [
+      "Glutes"
+    ],
+    "secondaryMuscles": [
+      "Hamstrings",
+      "Adductors"
+    ]
+  },
+  {
+    "name": "Standing calf raise",
+    "primaryMuscles": [
+      "Calves"
+    ],
+    "secondaryMuscles": []
+  },
+  {
+    "name": "Cable crunch",
+    "primaryMuscles": [
+      "Abs"
+    ],
+    "secondaryMuscles": [
+      "Obliques"
+    ]
+  }
 ]

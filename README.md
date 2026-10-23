@@ -312,7 +312,7 @@ Use your configured database username/name if different. The transaction stops i
 4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
 5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
 
-Current verification: 35 frontend tests, 23 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+Current verification: 42 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
 
 Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
 
@@ -321,3 +321,19 @@ Guest regression tests exercise the full temporary plan/schedule/history flow wi
 Each exercise in the new/edit plan dialog has an optional **Rest (sec)** field. Enter 0–3600 seconds (for example, 90), or leave it blank for no target. Rest targets appear on plan cards, calendar plan details and the active workout screen. They are saved with account plans and remain temporary for guests. Existing plans have no rest target until you add one. Restart the backend after updating so Hibernate adds the nullable `plan_exercises.rest_seconds` column.
 
 Plan API exercise objects accept optional `restSeconds` (integer or null). Updating a plan can change it or clear it with null. This is a planned duration; completed workout history continues to record actual weights and reps.
+
+### Exercise muscles
+
+All 50 built-in exercises include primary and secondary muscle labels. For example, bench press lists Chest as primary and Triceps/Front delts as secondary. Labels appear in the catalog, exercise picker, plan cards, scheduled plan details and active workout screen. Catalog search also matches muscle names.
+
+Custom exercises accept optional comma-separated primary and secondary muscles (up to 8 labels per group, 40 characters per label). Unknown custom exercises show unspecified labels rather than guessing from the name. Metadata belongs to the shared exercise catalog; existing plan and history IDs are preserved. Restart the backend to create the muscle tables and backfill defaults. Previously assigned muscle labels are not overwritten on startup.
+
+The API accepts optional `primaryMuscles` and `secondaryMuscles` arrays on `POST /api/exercises`, and returns them on catalog entries. Guest mode uses the same built-in metadata without network access. Default labels are stored in `backend/src/main/resources/exercise-muscles.json` and `frontend/src/services/defaultExercises.json`; a test checks they stay identical.
+
+Labels use simplified training categories and assume typical technique; grip, stance and execution can change emphasis. Primary/secondary classifications differ between references. Reference examples: [StrengthLog bench press guide](https://www.strengthlog.com/bench-press/) and [NASM bench press guide](https://www.nasm.org/resource-center/exercise-library/barbell-bench-press).
+
+### Plan muscle diagram
+
+Click a plan title on Dashboard or Workout Plans, or a saved plan in Schedule, to open its details. The front/back full-body SVG highlights all labeled muscles in that plan: green for primary, orange for secondary, gray for other surface regions. The lists below provide a text equivalent. A muscle trained as primary by any exercise takes priority in the combined map; highlights do not represent intensity or set counts.
+
+The illustration is a simplified surface map. Smaller/deeper muscles use nearby regions, and custom labels with no diagram mapping remain listed separately. Exercises missing muscle metadata are reported and do not receive guessed highlights. The diagram uses the same catalog in guest and account modes and needs no external image service.

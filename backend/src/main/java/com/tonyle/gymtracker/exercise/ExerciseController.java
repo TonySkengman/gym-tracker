@@ -14,10 +14,12 @@ public class ExerciseController {
     private final ExerciseRepository repository;
     private final ExerciseCatalog catalog;
     public ExerciseController(ExerciseRepository repository, ExerciseCatalog catalog) { this.repository = repository; this.catalog = catalog; }
-    public record ExerciseRequest(@NotBlank @Size(max = 100) String name) {}
+    public record ExerciseRequest(@NotBlank @Size(max = 100) String name,
+        @Size(max = 8) List<@NotBlank @Size(max = 40) String> primaryMuscles,
+        @Size(max = 8) List<@NotBlank @Size(max = 40) String> secondaryMuscles) {}
     @GetMapping public List<Exercise> all() { return repository.findAll(Sort.by("name")); }
     @PostMapping public ResponseEntity<Exercise> create(@Valid @RequestBody ExerciseRequest request) {
-        var exercise = catalog.create(request.name());
+        var exercise = catalog.create(request.name(), request.primaryMuscles(), request.secondaryMuscles());
         return ResponseEntity.created(URI.create("/api/exercises/" + exercise.getId())).body(exercise);
     }
 }

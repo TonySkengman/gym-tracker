@@ -57,3 +57,50 @@
   .plan-exercise-input > :first-child { grid-column: 1 / -1; }
   .plan-exercise-input > .icon-button { margin-top: 29px; }
 }
+
+.exercise-muscles { margin-top: 6px; text-align: left; font-weight: 400; }
+.exercise-muscles p { font-size: 11px; color: #97a58b; line-height: 1.65; white-space: normal; }
+.exercise-muscles strong { color: #bdcdb0; font-weight: 500; }
+.catalog-list h3 { font-size: 15px; }
+.muscle-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.muscle-fields .muted { grid-column: 1 / -1; font-size: 11px; }
+.catalog-create { flex-wrap: wrap; }
+.catalog-create > .muscle-fields { flex: 1 1 100%; }
+.picker-create .muscle-fields { grid-template-columns: 1fr; margin-top: 12px; }
+.picker-create .muscle-fields label { font-size: 11px; }
+.exercise-list > div { align-items: flex-start; gap: 12px; }
+@media(max-width:700px) { .muscle-fields { grid-template-columns: 1fr; } }
+
+.plan-muscle-map { margin-top: 24px; padding: 20px; border: 1px solid #35452f; border-radius: 12px; background: #11190f; }
+.body-views { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; max-width: 400px; margin: 16px auto; }
+.body-view { margin: 0; text-align: center; }
+.body-view svg { display: block; width: 100%; max-height: 350px; }
+.body-view figcaption { color: #a1ae96; font-size: 11px; margin-top: 8px; }
+.body-outline { fill: #263128; stroke: #51614d; stroke-width: 1.3; stroke-linejoin: round; }
+.body-muscle { stroke: #11190f; stroke-width: 1.3; stroke-linejoin: round; }
+.body-muscle.inactive { fill: #3b493b; }
+.body-muscle.primary { fill: #c4ef79; }
+.body-muscle.secondary { fill: #eeac65; }
+.body-detail { fill: none; stroke: #63735c; stroke-width: 1; }
+.muscle-map-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 18px; font-size: 11px; color: #b7c5ac; }
+.muscle-map-legend > span { display: flex; align-items: center; gap: 6px; }
+.muscle-map-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
+.primary-dot { background: #c4ef79; }.secondary-dot { background: #eeac65; }.inactive-dot { background: #3b493b; border: 1px solid #63735c; }
+.plan-muscle-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+.plan-muscle-groups h4 { font-size: 11px; font-weight: 600; color: #d6e5ca; }
+.plan-muscle-groups p { color: #a6b59b; line-height: 1.7; font-size: 12px; margin-top: 5px; }
+@media(max-width:480px) { .plan-muscle-map { padding: 16px 12px; }.body-views { gap: 12px; }.plan-muscle-groups { grid-template-columns: 1fr; gap: 12px; } }
+
+.scheduled-plan-details { width: min(1040px, calc(100% - 24px)); }
+.plan-details-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; gap: 28px; margin-top: 24px; }
+.plan-exercises-panel { min-width: 0; }
+.plan-details-layout > .plan-muscle-map { margin-top: 0; min-width: 0; }
+@media(max-width:800px) { .plan-details-layout { grid-template-columns: 1fr; gap: 24px; } }
+
+/* Extend the title button across the card, with independent controls above it. */
+.plan-card { position: relative; isolation: isolate; transition: border-color .15s, background .15s; }
+.plan-card:hover { border-color: #6b8250; background: #1d2519; }
+.plan-card-details::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: 12px; cursor: pointer; }
+.plan-card-details:focus-visible { outline: none; }
+.plan-card-details:focus-visible::after { outline: 2px solid #c4ef79; outline-offset: 3px; }
+.plan-card .plan-footer button { position: relative; z-index: 2; }

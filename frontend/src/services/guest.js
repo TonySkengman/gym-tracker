@@ -4,7 +4,7 @@ import { workoutPayload } from './workouts.js';
 // Each guest visit owns an isolated, disposable workspace. No storage or network calls.
 export function createGuestApi() {
   let plans = [], workouts = [], schedule = [];
-  const exercises = defaultExercises.map((name, index) => ({ id: index + 1, name }));
+  const exercises = defaultExercises.map((exercise, index) => ({ ...structuredClone(exercise), id: index + 1 }));
   let nextPlanId = 1, nextScheduleId = 1;
   const copy = value => structuredClone(value);
   const normalize = name => name.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -56,11 +56,16 @@ export function createGuestApi() {
     },
     deletePlan: async id => { find(plans, id); plans = plans.filter(plan => plan.id !== id); },
     getExercises: async () => copy([...exercises].sort((a, b) => a.name.localeCompare(b.name))),
-    createExercise: async name => {
+    createExercise: async (name, muscles = {}) => {
       if (!name.trim()) throw new Error('Enter an exercise name.');
       if (exercises.some(exercise => normalize(exercise.name) === normalize(name))) throw new Error('An exercise with this name already exists');
+      const primaryMuscles = muscles.primaryMuscles || [], secondaryMuscles = muscles.secondaryMuscles || [];
+      if ([primaryMuscles, secondaryMuscles].some(group => !Array.isArray(group) || group.length > 8 || group.some(value => typeof value !== 'string' || !value.trim() || value.trim().length > 40))) throw new Error('Use up to 8 muscles per group, with at most 40 characters each.');
       const item = resolve({ name });
-      return { id: item.exerciseId, name: item.name };
+      const saved = exercises.find(exercise => exercise.id === item.exerciseId);
+      saved.primaryMuscles = [...new Set(primaryMuscles.map(name => name.trim()))];
+      saved.secondaryMuscles = [...new Set(secondaryMuscles.map(name => name.trim()))].filter(name => !saved.primaryMuscles.some(primary => primary.toLowerCase() === name.toLowerCase()));
+      return copy(saved);
     },
     getWorkouts: async () => copy(workouts),
     completeWorkout: async draft => saveSession(draft, false),

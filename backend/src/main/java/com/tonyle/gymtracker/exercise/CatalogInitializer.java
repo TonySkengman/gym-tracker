@@ -17,22 +17,17 @@ public class CatalogInitializer implements ApplicationRunner {
     }
     @Override @Transactional
     public void run(ApplicationArguments arguments) {
-        // Common gym movements; retain existing names and IDs when seeding again.
-        for (String name : new String[] {
-            "Bench press", "Dumbbell press", "Incline dumbbell press", "Squat",
-            "Deadlift", "Barbell row", "Lat pulldown", "Pull-up",
-            "Shoulder press", "Biceps curl", "Triceps pushdown", "Leg press",
-            "Incline bench press", "Chest press machine", "Cable fly", "Pec deck",
-            "Push-up", "Chest dip", "Seated cable row", "Dumbbell row",
-            "Chest-supported row", "Chin-up", "Straight-arm pulldown", "Face pull",
-            "Back extension", "Dumbbell shoulder press", "Lateral raise", "Reverse pec deck",
-            "Rear delt fly", "Dumbbell shrug", "Hammer curl", "Preacher curl",
-            "Cable curl", "Incline dumbbell curl", "Overhead triceps extension", "Skull crusher",
-            "Close-grip bench press", "Romanian deadlift", "Sumo deadlift", "Front squat",
-            "Goblet squat", "Hack squat", "Bulgarian split squat", "Walking lunge",
-            "Leg extension", "Seated leg curl", "Lying leg curl", "Hip thrust",
-            "Standing calf raise", "Cable crunch"
-        }) catalog.resolve(null, name);
+        // Backfill only missing labels, keeping existing exercise IDs and custom metadata.
+        try (var input = new org.springframework.core.io.ClassPathResource("exercise-muscles.json").getInputStream()) {
+            var seeds = tools.jackson.databind.json.JsonMapper.builder().build().readValue(input, MuscleSeed[].class);
+            for (var seed : seeds) {
+                var exercise = catalog.resolve(null, seed.name());
+                if (exercise.getPrimaryMuscles().isEmpty() && exercise.getSecondaryMuscles().isEmpty())
+                    exercise.setMuscles(seed.primaryMuscles(), seed.secondaryMuscles());
+            }
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Cannot load default exercise muscles", exception);
+        }
         // Add identities without renaming or deleting existing records. Safe to run again.
         plans.findAll().forEach(plan -> plan.getExercises().forEach(exercise -> {
             if (exercise.getExerciseId() == null) exercise.linkExercise(catalog.resolve(null, exercise.getName()).getId());
@@ -41,4 +36,5 @@ public class CatalogInitializer implements ApplicationRunner {
             if (set.getExerciseId() == null) set.linkExercise(catalog.resolve(null, set.getExerciseName()).getId());
         }));
     }
+    public record MuscleSeed(String name, java.util.List<String> primaryMuscles, java.util.List<String> secondaryMuscles) {}
 }

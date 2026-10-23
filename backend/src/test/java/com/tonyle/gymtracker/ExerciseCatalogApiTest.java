@@ -52,6 +52,34 @@ class ExerciseCatalogApiTest extends AuthenticatedTest {
         mvc.perform(post("/api/exercises").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\" \"}")).andExpect(status().isBadRequest());
     }
 
+    @Test void muscleLabelsPersistValidateAndBackfillWithoutChangingIdentity() throws Exception {
+        var bench = catalog.resolve(null, "bench press");
+        assertEquals(java.util.List.of("Chest"), bench.getPrimaryMuscles());
+        assertEquals(java.util.List.of("Triceps", "Front delts"), bench.getSecondaryMuscles());
+        Long id = bench.getId();
+        jdbc.update("delete from exercise_primary_muscles where exercise_id = ?", id);
+        jdbc.update("delete from exercise_secondary_muscles where exercise_id = ?", id);
+        initializer.run(null);
+        var reloaded = exercises.findById(id).orElseThrow();
+        assertEquals(id, reloaded.getId());
+        assertEquals(java.util.List.of("Chest"), reloaded.getPrimaryMuscles());
+        initializer.run(null);
+        assertEquals(java.util.List.of("Chest"), exercises.findById(id).orElseThrow().getPrimaryMuscles());
+        mvc.perform(post("/api/exercises").contentType(MediaType.APPLICATION_JSON).content("""
+            {"name":"Custom muscle test press","primaryMuscles":[" Chest "],"secondaryMuscles":["Triceps","chest"]}
+            """))
+            .andExpect(status().isCreated()).andExpect(jsonPath("$.primaryMuscles[0]").value("Chest"))
+            .andExpect(jsonPath("$.secondaryMuscles.length()").value(1));
+        var custom = catalog.resolve(null, "Custom muscle test press");
+        initializer.run(null);
+        assertEquals(java.util.List.of("Triceps"), exercises.findById(custom.getId()).orElseThrow().getSecondaryMuscles());
+        mvc.perform(get("/api/exercises")).andExpect(status().isOk())
+            .andExpect(jsonPath("$[?(@.name == 'Custom muscle test press')].primaryMuscles[0]").value("Chest"));
+        mvc.perform(post("/api/exercises").contentType(MediaType.APPLICATION_JSON)
+            .content("{\"name\":\"Invalid muscles\",\"primaryMuscles\":[\" \"]}"))
+            .andExpect(status().isBadRequest());
+    }
+
     @Test void httpEditingAndDeletionPersistSkipsAndRemoveDependentRows() throws Exception {
         var performed = catalog.resolve(null, "HTTP test press");
         var skipped = catalog.resolve(null, "HTTP test row");

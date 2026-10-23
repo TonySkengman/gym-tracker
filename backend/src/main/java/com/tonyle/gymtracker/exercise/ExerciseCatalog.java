@@ -18,8 +18,11 @@ public class ExerciseCatalog {
         // Support existing plans, old drafts and API clients that only have a name.
         return repository.findByNormalizedName(key(name)).orElseGet(() -> repository.save(new Exercise(cleanName(name), key(name))));
     }
-    public Exercise create(String name) {
+    public Exercise create(String name) { return create(name, null, null); }
+    public Exercise create(String name, java.util.List<String> primary, java.util.List<String> secondary) {
         if (repository.findByNormalizedName(key(name)).isPresent()) throw new ResponseStatusException(HttpStatus.CONFLICT, "An exercise with this name already exists");
-        return repository.save(new Exercise(cleanName(name), key(name)));
+        var exercise = new Exercise(cleanName(name), key(name));
+        exercise.setMuscles(primary, secondary);
+        return repository.save(exercise);
     }
 }

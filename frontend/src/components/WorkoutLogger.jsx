@@ -1,7 +1,8 @@
+import ExerciseMuscles from './ExerciseMuscles';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Plus, Trash2, X } from 'lucide-react';
 
-export default function WorkoutLogger({ draft, onChange, onFinish, onClose, onDiscard, editing = false }) {
+export default function WorkoutLogger({ catalog, draft, onChange, onFinish, onClose, onDiscard, editing = false }) {
   const dialog = useRef(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -30,7 +31,7 @@ export default function WorkoutLogger({ draft, onChange, onFinish, onClose, onDi
       <p className="muted mt-3">Record each set in kilograms. Enter 0 for bodyweight or no added weight. {editing ? 'Changes apply to History and Progress after saving. The original workout date is preserved.' : 'Close this window to return to your workout later.'}</p>
       <fieldset disabled={saving} className="workout-fields">
         {draft.exercises.map((exercise, exerciseIndex) => <section className="logged-exercise" key={exerciseIndex}>
-          <div className="exercise-log-heading"><h3>{exercise.name}</h3><label className="skip-toggle"><input type="checkbox" checked={Boolean(exercise.skipped)} onChange={event => changeExercise(exerciseIndex, { skipped: event.target.checked })}/>Skip exercise {exerciseIndex + 1}</label></div><p className="muted">Target: {exercise.targetSets || exercise.sets.length} sets × {exercise.targetReps} reps{exercise.restSeconds != null && ` · Rest: ${exercise.restSeconds}s between sets`}</p>
+          <div className="exercise-log-heading"><div><h3>{exercise.name}</h3><ExerciseMuscles exercise={exercise} catalog={catalog}/></div><label className="skip-toggle"><input type="checkbox" checked={Boolean(exercise.skipped)} onChange={event => changeExercise(exerciseIndex, { skipped: event.target.checked })}/>Skip exercise {exerciseIndex + 1}</label></div><p className="muted">Target: {exercise.targetSets || exercise.sets.length} sets × {exercise.targetReps} reps{exercise.restSeconds != null && ` · Rest: ${exercise.restSeconds}s between sets`}</p>
           {exercise.skipped && <p className="skipped-note">Skipped — no weights or reps will be recorded.</p>}
           <fieldset className="workout-fields" disabled={exercise.skipped}>
           {exercise.sets.map((set, setIndex) => <div className="logged-set flexible-set" key={setIndex}>

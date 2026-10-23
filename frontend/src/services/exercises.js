@@ -1,6 +1,6 @@
 import { apiFetch } from './auth.js';
 export const getExercises = () => request();
-export const createExercise = name => request({ method: 'POST', body: JSON.stringify({ name: name.trim() }) });
+export const createExercise = (name, muscles = {}) => request({ method: 'POST', body: JSON.stringify({ name: name.trim(), ...muscles }) });
 async function request(options = {}) {
   let response;
   try { response = await apiFetch('/api/exercises', { ...options, headers: { 'Content-Type': 'application/json' } }); }
