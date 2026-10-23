@@ -56,3 +56,30 @@ export function workoutToDraft(workout) {
 export function matchesWorkoutDraft(draft, planId, scheduleId = null) {
   return Boolean(draft && draft.planId === planId && (scheduleId == null || draft.scheduleId === scheduleId));
 }
+
+// Compare against completed sessions before this workout started, across all plans.
+// Repeated exercise entries match their corresponding occurrence, not a merged set list.
+export function previousExerciseSessions(draft, workouts = []) {
+  const nameKey = name => (name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const matches = (exercise, group) => exercise.exerciseId != null && group.exerciseId != null
+    ? exercise.exerciseId === group.exerciseId : nameKey(exercise.name) === nameKey(group.name);
+  const cutoff = Date.parse(draft.startedAt);
+  const sessions = workouts.filter(workout => workout.id !== draft.id
+    && Number.isFinite(Date.parse(workout.completedAt)) && Date.parse(workout.completedAt) <= cutoff)
+    .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt) || String(a.id).localeCompare(String(b.id)));
+  return draft.exercises.map((exercise, index) => {
+    const occurrence = draft.exercises.slice(0, index).filter(item => matches(exercise, item)).length;
+    for (const workout of sessions) {
+      const groups = groupWorkoutSets(workout.sets || []).sort((a, b) => a.exerciseNumber - b.exerciseNumber);
+      const group = groups.filter(group => matches(exercise, group))[occurrence];
+      if (!group) continue; // Skipped exercises have no recorded sets.
+      const sets = group.sets.filter(set => set.weight != null && String(set.weight).trim() !== ''
+        && Number.isFinite(Number(set.weight)) && Number(set.weight) >= 0
+        && Number.isInteger(Number(set.reps)) && Number(set.reps) > 0)
+        .sort((a, b) => a.setNumber - b.setNumber)
+        .map(set => ({ weight: Number(set.weight), reps: Number(set.reps), setNumber: set.setNumber }));
+      if (sets.length) return { workoutId: workout.id, planName: workout.planName, completedAt: workout.completedAt, sets };
+    }
+    return null;
+  });
+}

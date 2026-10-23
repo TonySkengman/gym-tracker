@@ -260,7 +260,7 @@ To check PostgreSQL restart persistence, create a disposable plan in the app, ru
 
 1. Add versioned database migrations and PostgreSQL-specific integration tests.
 2. Add exercise catalog rename/merge tools with deliberate history handling.
-3. Add previous-session suggestions while logging workouts.
+3. Add personal record highlights and data export/import.
 
 ## Manual check after this milestone
 
@@ -312,7 +312,7 @@ Use your configured database username/name if different. The transaction stops i
 4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
 5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
 
-Current verification: 42 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+Current verification: 52 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
 
 Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
 
@@ -337,3 +337,19 @@ Labels use simplified training categories and assume typical technique; grip, st
 Click a plan title on Dashboard or Workout Plans, or a saved plan in Schedule, to open its details. The front/back full-body SVG highlights all labeled muscles in that plan: green for primary, orange for secondary, gray for other surface regions. The lists below provide a text equivalent. A muscle trained as primary by any exercise takes priority in the combined map; highlights do not represent intensity or set counts.
 
 The illustration is a simplified surface map. Smaller/deeper muscles use nearby regions, and custom labels with no diagram mapping remain listed separately. Exercises missing muscle metadata are reported and do not receive guessed highlights. The diagram uses the same catalog in guest and account modes and needs no external image service.
+
+### Previous workout values
+
+The active workout logger shows each exercise’s last recorded weights and reps, the session date and source plan, plus a read-only **Previous** value beside each set. On narrow screens the comparison sits below the inputs. New values stay blank until you enter them; adding a set never invents an earlier value.
+
+Comparison uses the most recent completed session at or before the active workout’s start time, across all plans. Catalog IDs take priority, with normalized-name matching for legacy records that lack an ID. Skipped exercises, invalid timestamps and the current session are excluded. Repeated exercise blocks retain separate comparisons. The feature works for saved accounts and the current guest visit; editing a completed workout does not show these suggestions. Loading and history errors are displayed without blocking workout entry.
+
+The stylesheet is formatted into readable sections, with duplicate selector rules consolidated, superseded declarations removed and obsolete Next Workout layout styles deleted. Responsive declaration checks covered 14 viewport widths during the cleanup.
+
+### Rest timer
+
+While logging an active workout, press **Start rest** below an exercise after a set. It uses that exercise’s planned rest seconds, or 60 seconds if no target is set. A zero-second target displays **No rest planned**. Only one countdown runs at a time; starting another replaces the previous countdown.
+
+The timer shows the exercise name and remaining time, with Pause, Start/Resume, Reset and Skip rest controls. Reset restores the full duration in a paused state. At zero, **Rest complete** appears; Reset starts preparation for another rest or Dismiss clears it. There is no browser-notification permission requirement.
+
+The deadline keeps the countdown accurate while the workout is minimized or the tab is inactive. Account drafts preserve the timer across refresh; guest timers last only for the current visit. Finishing or discarding a workout clears its timer. This is a workout aid, not a recorded rest measurement, and it is hidden when editing completed History.
