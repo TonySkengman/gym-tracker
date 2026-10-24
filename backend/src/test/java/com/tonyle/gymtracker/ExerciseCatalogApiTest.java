@@ -27,6 +27,9 @@ class ExerciseCatalogApiTest extends AuthenticatedTest {
     @Autowired ExerciseRepository exercises;
     @Autowired WorkoutController workouts;
     @Autowired JdbcTemplate jdbc;
+    @Autowired com.tonyle.gymtracker.plan.PlanRepository plans;
+    @Autowired WorkoutRepository sessions;
+    @Autowired org.springframework.transaction.support.TransactionTemplate transaction;
     private MockMvc mvc;
     @BeforeEach void setup() { mvc = MockMvcBuilders.webAppContextSetup(context).build(); }
 
@@ -78,6 +81,66 @@ class ExerciseCatalogApiTest extends AuthenticatedTest {
         mvc.perform(post("/api/exercises").contentType(MediaType.APPLICATION_JSON)
             .content("{\"name\":\"Invalid muscles\",\"primaryMuscles\":[\" \"]}"))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test void knownDuplicatesMergeWithoutLosingPlanHistoryOrSkippedExerciseData() {
+        var names = java.util.List.of("Dumbell press", "Incline dumbbell bench press", "Pull ups");
+        var legacy = names.stream().map(name -> exercises.saveAndFlush(new Exercise(name, name.toLowerCase(java.util.Locale.ROOT)))).toList();
+        var plan = new com.tonyle.gymtracker.plan.WorkoutPlan(new com.tonyle.gymtracker.plan.PlanRequest("Legacy routine", "Keep this", java.util.List.of(
+            new com.tonyle.gymtracker.plan.PlanRequest.ExerciseRequest(names.get(0), 3, 8, legacy.get(0).getId(), 90),
+            new com.tonyle.gymtracker.plan.PlanRequest.ExerciseRequest(names.get(1), 2, 10, legacy.get(1).getId(), 60))));
+        plan.assignOwner(987L);
+        plan = plans.saveAndFlush(plan);
+        var request = new WorkoutRequest(UUID.randomUUID(), plan.getId(), "Original snapshot", java.time.Instant.now().minusSeconds(300), java.util.List.of(
+            new WorkoutRequest.ExerciseRequest(names.get(0), 8, java.util.List.of(new WorkoutRequest.SetRequest(new java.math.BigDecimal("42.50"), java.math.BigDecimal.valueOf(7))), legacy.get(0).getId(), false),
+            new WorkoutRequest.ExerciseRequest(names.get(2), 10, java.util.List.of(), legacy.get(2).getId(), true)));
+        var workout = new WorkoutSession(request);
+        workout.assignOwner(987L);
+        workout = sessions.saveAndFlush(workout);
+        var completedAt = workout.getCompletedAt();
+        var custom = exercises.saveAndFlush(new Exercise("Dumbell bench press", "dumbell bench press"));
+        jdbc.update("insert into exercise_primary_muscles (exercise_id, muscle_order, muscle) values (?, 0, 'Custom chest')", custom.getId());
+        var unknown = catalog.resolve(null, "Unspecified custom movement");
+        var count = exercises.count();
+        initializer.run(null);
+        initializer.run(null);
+        assertEquals(count - 3, exercises.count());
+        legacy.forEach(item -> assertFalse(exercises.existsById(item.getId())));
+        var press = catalog.resolve(null, "Dumbbell press");
+        var incline = catalog.resolve(null, "Incline dumbbell press");
+        var pull = catalog.resolve(null, "Pull-up");
+        var planId = plan.getId();
+        transaction.executeWithoutResult(status -> {
+        var savedPlan = plans.findById(planId).orElseThrow();
+        assertEquals(987L, savedPlan.getOwnerId());
+        assertEquals("Keep this", savedPlan.getDescription());
+        assertEquals(press.getId(), savedPlan.getExercises().get(0).getExerciseId());
+        assertEquals(incline.getId(), savedPlan.getExercises().get(1).getExerciseId());
+        assertEquals(90, savedPlan.getExercises().get(0).getRestSeconds());
+        assertEquals(3, savedPlan.getExercises().get(0).getTargetSets());
+        assertEquals(10, savedPlan.getExercises().get(1).getTargetReps());
+        });
+        var response = transaction.execute(status -> {
+            var saved = sessions.findById(request.id()).orElseThrow();
+            assertEquals(987L, saved.getOwnerId());
+            return WorkoutResponse.from(saved);
+        });
+        assertEquals(completedAt, response.completedAt());
+        assertEquals("Original snapshot", response.planName());
+        assertEquals(press.getId(), response.sets().getFirst().exerciseId());
+        assertEquals(names.get(0), response.sets().getFirst().exerciseName());
+        assertEquals(new java.math.BigDecimal("42.50"), response.sets().getFirst().weight());
+        assertEquals(7, response.sets().getFirst().reps());
+        assertEquals(pull.getId(), response.skippedExercises().getFirst().exerciseId());
+        assertEquals(2, response.skippedExercises().getFirst().exerciseNumber());
+        assertEquals(java.util.List.of("Custom chest"), exercises.findById(custom.getId()).orElseThrow().getPrimaryMuscles());
+        assertTrue(exercises.findById(unknown.getId()).orElseThrow().getPrimaryMuscles().isEmpty());
+        assertEquals(press.getId(), catalog.resolve(legacy.get(0).getId(), names.get(0)).getId());
+        assertEquals(pull.getId(), catalog.resolve(null, "Pull ups").getId());
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> catalog.create("Pull ups"));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> catalog.resolve(Long.MAX_VALUE, "Unknown movement"));
+        sessions.deleteById(request.id());
+        plans.deleteById(plan.getId());
     }
 
     @Test void httpEditingAndDeletionPersistSkipsAndRemoveDependentRows() throws Exception {

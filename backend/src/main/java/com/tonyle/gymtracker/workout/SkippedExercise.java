@@ -13,6 +13,7 @@ public class SkippedExercise {
         exerciseId = exercise.exerciseId(); exerciseName = exercise.name();
         exerciseNumber = number; targetReps = exercise.targetReps();
     }
+    public void linkExercise(Long id) { exerciseId = id; }
     public Long getExerciseId() { return exerciseId; }
     public String getExerciseName() { return exerciseName; }
     public int getExerciseNumber() { return exerciseNumber; }

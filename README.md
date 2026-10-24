@@ -319,7 +319,7 @@ Use your configured database username/name if different. The transaction stops i
 4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
 5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
 
-Current verification: 82 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+Current verification: 83 frontend tests, 26 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
 
 Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
 
@@ -402,4 +402,9 @@ Finishing a workout opens a summary with first benchmarks and new records, the p
 
 Records are calculated from saved History rather than stored separately. Editing or deleting a session immediately recalculates them. Guest records last only for the current visit; account records use that user's completed sessions. Before completing a workout, the app refreshes History for comparison. If that refresh fails, the workout can still be saved, but the summary does not claim records and History/Progress provide a retry.
 
-Verification: 82 frontend tests and the production build pass. Record tests cover exact reps, ties, first benchmarks, repeated sets, edits/deletions, retry identity, future-session exclusion, zero/invalid weights and guest isolation. Server-rendered checks cover Progress, session links and completion summary states. Final browser interaction and mobile appearance should be checked locally.
+Verification: 83 frontend tests and the production build pass. Record tests cover exact reps, ties, first benchmarks, repeated sets, edits/deletions, retry identity, future-session exclusion, zero/invalid weights and guest isolation. Server-rendered checks cover Progress, session links and completion summary states. Final browser interaction and mobile appearance should be checked locally.
+
+
+On backend restart, known duplicate names such as `Dumbell press`, `Dumbbell bench press`, `Incline dumbbell bench press` and `Pull ups` are merged into their canonical defaults. The migration fills missing labels, moves plan, recorded-set and skipped-exercise links, then deletes the duplicate catalog rows in one transaction. Historical names, set order, weights, reps, owners and session dates are preserved. Repeating the migration does not change the result. Entries with distinct custom muscle metadata and unknown custom movements are left alone, so a real custom catalog can still exceed 130 entries.
+
+Old name-only requests resolve to canonical defaults instead of recreating these aliases. Browser drafts containing a removed ID and a known legacy name can still be saved. Other invalid IDs remain rejected. All 26 backend tests and the backend build pass, including migration/restart coverage. Restart your backend and refresh the page to apply this to PostgreSQL; this session could not access the local Docker socket to run that step. If the count remains above 130, inspect the remaining names rather than deleting entries based on the count alone.

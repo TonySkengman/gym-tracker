@@ -51,3 +51,14 @@ test('picker keeps custom muscle groups and ignores blank primary labels', () =>
   ]);
   assert.deepEqual(groups.map(group => group.label), ['Hip flexors', 'Other / unspecified']);
 });
+
+test('the full default catalog remains selectable when grouped, including upper-chest exercises', async () => {
+  const { default: defaults } = await import('./defaultExercises.json', { with: { type: 'json' } });
+  const fullCatalog = defaults.map((exercise, index) => ({ ...exercise, id: index + 1 }));
+  const groups = groupExercisesByPrimaryMuscle(fullCatalog);
+  const options = groups.flatMap(group => group.exercises);
+  assert.deepEqual(options.map(item => item.id).sort((a, b) => a - b), fullCatalog.map(item => item.id));
+  assert.ok(groups.find(group => group.label === 'Upper chest').exercises.some(item => item.name === 'Incline bench press'));
+  const matches = groupExercisesByPrimaryMuscle(filterExercises(fullCatalog, 'incline bench'));
+  assert.deepEqual(matches.flatMap(group => group.exercises.map(item => item.name)), ['Incline bench press']);
+});
