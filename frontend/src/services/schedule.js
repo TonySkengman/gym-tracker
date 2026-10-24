@@ -36,3 +36,18 @@ export function nextScheduledWorkouts(entries, today = localDateKey(new Date()))
 export function nextScheduledWorkout(entries, today = localDateKey(new Date())) {
   return nextScheduledWorkouts(entries, today)[0] || null;
 }
+
+// Validate locally before saving a date change. The API still enforces these rules.
+export function moveScheduledWorkout(entries, id, date) {
+  const entry = entries.find(item => item.id === id);
+  if (!entry) throw new Error('This scheduled workout is no longer available. Refresh the schedule.');
+  if (entry.completedWorkoutId) throw new Error('Completed workouts cannot be rescheduled. Add a new booking instead.');
+  if (entry.planAvailable === false) throw new Error('This plan was deleted. Use Reschedule to assign another plan.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number(date.slice(0, 4)) < 1900
+    || Number(date.slice(0, 4)) > 9999 || localDateKey(scheduleDate(date)) !== date)
+    throw new Error('Choose a valid date between 1900 and 9999.');
+  if (entry.date === date) return null;
+  if (entries.some(item => item.id !== id && item.planId === entry.planId && item.date === date))
+    throw new Error('This plan is already scheduled for that date.');
+  return { ...entry, date };
+}

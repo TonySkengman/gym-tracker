@@ -13,7 +13,15 @@ A full-stack gym workout tracker built as a portfolio project. Create routines, 
 
 Prerequisites: Node.js 22.12+ (24 recommended), a Java 21 JDK, and Docker Desktop with its engine running. No global Maven installation is required. An internet connection is needed for uncached dependencies on first launch.
 
-From the project root, start the database:
+For a single-terminal startup, open Docker Desktop, then run from the project root:
+
+```sh
+./dev.sh
+```
+
+This selects Java 21 on macOS, waits for PostgreSQL to become healthy, installs frontend dependencies on first use or when the lockfile changes, and starts the backend and frontend together. Both logs appear in the same terminal. Open http://localhost:5173 once Vite is ready. Press **Ctrl+C** to stop both app processes; PostgreSQL stays running so your data is preserved. To stop the database too, run `docker compose stop`. Stop any separately running frontend/backend before using the launcher. Linux users should select Java 21 using `JAVA_HOME` first. The launcher needs no globally installed Maven or additional npm packages.
+
+Alternatively, start the services separately. From the project root, start the database:
 
 ```sh
 docker compose up -d --wait
@@ -23,7 +31,6 @@ In one terminal, start the backend:
 
 ```sh
 cd backend
-# macOS: select the installed Java 21 JDK
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
 ./mvnw spring-boot:run
 ```
@@ -312,7 +319,7 @@ Use your configured database username/name if different. The transaction stops i
 4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
 5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
 
-Current verification: 52 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+Current verification: 66 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
 
 Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
 
@@ -334,7 +341,7 @@ Labels use simplified training categories and assume typical technique; grip, st
 
 ### Plan muscle diagram
 
-Click a plan title on Dashboard or Workout Plans, or a saved plan in Schedule, to open its details. The front/back full-body SVG highlights all labeled muscles in that plan: green for primary, orange for secondary, gray for other surface regions. The lists below provide a text equivalent. A muscle trained as primary by any exercise takes priority in the combined map; highlights do not represent intensity or set counts.
+Click a plan title on Dashboard or Workout Plans, or a saved plan in Schedule, to open its details. The front/back full-body SVG highlights all labeled muscles in that plan: yellow for primary, blue for secondary, gray for other surface regions. The lists below provide a text equivalent. A muscle trained as primary by any exercise takes priority in the combined map; highlights do not represent intensity or set counts.
 
 The illustration is a simplified surface map. Smaller/deeper muscles use nearby regions, and custom labels with no diagram mapping remain listed separately. Exercises missing muscle metadata are reported and do not receive guessed highlights. The diagram uses the same catalog in guest and account modes and needs no external image service.
 
@@ -353,3 +360,23 @@ While logging an active workout, press **Start rest** below an exercise after a 
 The timer shows the exercise name and remaining time, with Pause, Start/Resume, Reset and Skip rest controls. Reset restores the full duration in a paused state. At zero, **Rest complete** appears; Reset starts preparation for another rest or Dismiss clears it. There is no browser-notification permission requirement.
 
 The deadline keeps the countdown accurate while the workout is minimized or the tab is inactive. Account drafts preserve the timer across refresh; guest timers last only for the current visit. Finishing or discarding a workout clears its timer. This is a workout aid, not a recorded rest measurement, and it is hidden when editing completed History.
+
+### Filter exercises by primary muscle
+
+In **Exercises**, select a **Primary muscle** to narrow the catalog. Options come from the current catalog, including custom exercise labels. The dropdown matches primary muscles only; the search field still searches names and both primary/secondary labels. Both filters combine, and **Clear filters** resets them. The result count shows matching exercises out of the full catalog. Works in guest and signed-in modes.
+
+The new/edit workout plan exercise dropdown also groups options under their first listed primary muscle. Groups and exercises are sorted alphabetically, each exercise appears once, and entries with no primary label appear under **Other / unspecified**. Custom exercises join the appropriate group automatically. All of an exercise’s muscle labels remain visible after selection.
+
+### Electric Yellow theme
+
+Form uses near-black backgrounds (`#101112`), charcoal cards (`#1D1F21`) and electric yellow accents (`#E8FF3D`). Shared theme variables at the top of `frontend/src/index.css` control the core palette, including charts, buttons, focus rings and calendar highlights. Muscle maps use yellow for primary muscles and blue for secondary muscles to keep both roles visually distinct.
+
+### Reorder plan exercises
+
+When creating or editing a plan, drag an exercise’s grip handle and drop above/below another row. The highlighted edge marks the drop position. Up/down buttons offer the same action on phones and keyboards; a focused grip also responds to the Up/Down arrow keys. Each move carries the exercise’s catalog identity, sets, reps and rest duration together. Repeated instances remain independent. Save the plan to keep the order; cancelling leaves the saved plan untouched. Works in both guest and signed-in modes.
+
+### Drag to reschedule
+
+In **Schedule**, drag a planned workout marker (or its title in the selected-day list) onto another visible calendar date. The target day is highlighted, and the existing booking’s date is saved before the calendar and Next workout update. Dropping onto the same day does nothing. The visible adjacent-month dates also accept drops. Use the existing pencil **Reschedule** control for other months, mobile and keyboard use.
+
+Completed workouts and bookings with deleted plans cannot be dragged. Duplicate bookings show an error, and failed saves leave the original date intact. Moves preserve the booking ID and its connection to an active workout. Account moves use the existing PUT schedule endpoint; guest moves remain temporary. Manual check: move a disposable booking, refresh while signed in, and confirm its new date; also try a duplicate destination and cancelling a drag.

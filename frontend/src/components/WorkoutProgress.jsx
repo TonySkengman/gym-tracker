@@ -18,11 +18,11 @@ function ProgressChart({ sessions, metric, title, description }) {
   // Session IDs keep two workouts on the same day as distinct chart points.
   const dates = new Map(sessions.map(session => [session.id, session.completedAt]));
   const chartProps = { data: sessions, margin: { top: 20, right: 20, left: 0, bottom: 10 }, accessibilityLayer: true };
-  const axes = <><CartesianGrid stroke="#30382a" strokeDasharray="3 4" vertical={false}/><XAxis dataKey="id" tickFormatter={id => shortDate(dates.get(id))} tick={{ fill: '#a7b49b', fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={35}/><YAxis domain={[0, 'auto']} tick={{ fill: '#a7b49b', fontSize: 11 }} tickFormatter={number} axisLine={false} tickLine={false} width={62}/><Tooltip content={<SessionTooltip metric={metric}/>} cursor={volume ? { fill: '#c4ef7910' } : { stroke: '#617347' }}/></>;
+  const axes = <><CartesianGrid stroke="var(--app-border)" strokeDasharray="3 4" vertical={false}/><XAxis dataKey="id" tickFormatter={id => shortDate(dates.get(id))} tick={{ fill: 'var(--app-muted)', fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={35}/><YAxis domain={[0, 'auto']} tick={{ fill: 'var(--app-muted)', fontSize: 11 }} tickFormatter={number} axisLine={false} tickLine={false} width={62}/><Tooltip content={<SessionTooltip metric={metric}/>} cursor={volume ? { fill: 'var(--app-accent-wash)' } : { stroke: 'var(--app-accent-border)' }}/></>;
   return <section className="progress-chart-card" aria-label={`${title} chart. Values are also available in the session data table.`}>
     <div className="chart-heading"><h2>{title}</h2><p className="muted">{description}</p></div>
     <div className="progress-chart"><ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      {volume ? <BarChart {...chartProps}>{axes}<Bar dataKey={metric} name="Training volume" fill="#9fc86a" radius={[5, 5, 0, 0]} maxBarSize={48}/></BarChart> : <LineChart {...chartProps}>{axes}<Line type="linear" dataKey={metric} name="Heaviest weight" stroke="#c4ef79" strokeWidth={2.5} dot={{ r: 4, fill: '#c4ef79', stroke: '#192014', strokeWidth: 2 }} activeDot={{ r: 6 }}/></LineChart>}
+      {volume ? <BarChart {...chartProps}>{axes}<Bar dataKey={metric} name="Training volume" fill="var(--app-accent)" radius={[5, 5, 0, 0]} maxBarSize={48}/></BarChart> : <LineChart {...chartProps}>{axes}<Line type="linear" dataKey={metric} name="Heaviest weight" stroke="var(--app-accent)" strokeWidth={2.5} dot={{ r: 4, fill: 'var(--app-accent)', stroke: 'var(--app-surface)', strokeWidth: 2 }} activeDot={{ r: 6 }}/></LineChart>}
     </ResponsiveContainer></div>
     <p className="chart-unit">{volume ? 'kg × reps · one bar per session' : 'kg · one point per session'}</p>
   </section>;

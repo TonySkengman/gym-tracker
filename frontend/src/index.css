@@ -7,9 +7,24 @@
 /* Base typography and controls */
 
 :root {
+  --app-background: #101112;
+  --app-surface: #1d1f21;
+  --app-text: #f4f4f6;
+  --app-muted: #aaaab5;
+  --app-border: #34343e;
+  --app-input: #121216;
+  --app-input-border: #454550;
+  --app-accent: #e8ff3d;
+  --app-accent-hover: #f0ff80;
+  --app-accent-foreground: #101112;
+  --app-accent-surface: #282d19;
+  --app-accent-border: #5b6530;
+  --app-accent-wash: #e8ff3d14;
+  --app-muscle-secondary: #75b9f5;
+
   font-family: var(--font-sans);
-  color: #eff0ec;
-  background: #101211;
+  color: var(--app-text);
+  background: var(--app-background);
   font-synthesis: none;
   color-scheme: dark;
 }
@@ -37,7 +52,7 @@ button:disabled {
 }
 
 button:focus-visible, a:focus-visible {
-  outline: 2px solid #c4ef79;
+  outline: 2px solid var(--app-accent);
   outline-offset: 5px;
 }
 
@@ -64,13 +79,13 @@ h3 {
 }
 
 .muted {
-  color: #90958e;
+  color: var(--app-muted);
   font-size: 14px;
   line-height: 1.7;
 }
 
-.lime {
-  color: #c4ef79;
+.accent {
+  color: var(--app-accent);
 }
 
 /* Application shell and navigation */
@@ -84,8 +99,8 @@ h3 {
   width: 234px;
   position: fixed;
   inset: 0 auto 0 0;
-  background: #141615;
-  border-right: 1px solid #292c28;
+  background: #141416;
+  border-right: 1px solid #27272d;
   padding: 35px 20px;
   display: flex;
   flex-direction: column;
@@ -106,21 +121,21 @@ h3 {
 .brand-icon {
   display: grid;
   place-items: center;
-  background: #c4ef79;
-  color: #172014;
+  background: var(--app-accent);
+  color: var(--app-accent-foreground);
   border-radius: 11px;
   width: 39px;
   height: 39px;
 }
 
 .brand-dot {
-  color: #c4ef79;
+  color: var(--app-accent);
   margin-left: -10px;
 }
 
 .sidebar-label {
   font-size: 9px;
-  color: #727a6f;
+  color: #6f6f7a;
   letter-spacing: 1.7px;
   margin: 55px 12px 18px;
 }
@@ -138,26 +153,26 @@ nav {
   padding: 14px 15px;
   background: none;
   border: 0;
-  color: #999e96;
+  color: #95959f;
   border-radius: 8px;
   text-align: left;
   font-size: 14px;
 }
 
 .nav-item:hover {
-  background: #20241e;
+  background: #1f1f23;
 }
 
 .nav-item.active {
-  background: #262f20;
-  color: #c4ef79;
+  background: var(--app-accent-surface);
+  color: var(--app-accent);
 }
 
 .nav-dot {
   height: 6px;
   width: 6px;
   border-radius: 50%;
-  background: #c4ef79;
+  background: var(--app-accent);
   margin-left: auto;
 }
 
@@ -167,22 +182,22 @@ nav {
   align-items: center;
   margin-top: auto;
   padding: 22px 6px 0;
-  border-top: 1px solid #2a2e27;
+  border-top: 1px solid #28282d;
   font-size: 12px;
 }
 
 .sidebar-bottom p {
-  color: #757d71;
+  color: #71717d;
   font-size: 11px;
   margin-top: 4px;
 }
 
 .avatar {
-  background: #2a3025;
-  border: 1px solid #465039;
+  background: #28282d;
+  border: 1px solid #404049;
   border-radius: 50%;
   padding: 11px;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 main {
@@ -194,11 +209,11 @@ main {
 .topbar {
   height: 78px;
   padding: 0 42px;
-  border-bottom: 1px solid #242823;
+  border-bottom: 1px solid #232328;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #757b72;
+  color: #71717c;
   font-size: 12px;
 }
 
@@ -210,7 +225,7 @@ main {
 
 .topbar strong {
   font-weight: 400;
-  color: #d7dbd2;
+  color: #d4d4d9;
 }
 
 .version {
@@ -234,7 +249,7 @@ main {
 
 .eyebrow {
   font-size: 9px;
-  color: #a0ad91;
+  color: #9a9aa4;
   letter-spacing: 1.9px;
   margin-bottom: 12px;
 }
@@ -259,22 +274,22 @@ main {
 }
 
 .primary {
-  background: #c4ef79;
-  color: #182310;
+  background: var(--app-accent);
+  color: var(--app-accent-foreground);
 }
 
 .primary:hover, .hero-button:hover {
-  background: #d6ffa0;
+  background: var(--app-accent-hover);
 }
 
 .secondary {
-  background: #252a22;
-  color: #e0e7d9;
-  border-color: #373e30;
+  background: #232329;
+  color: #dedee2;
+  border-color: #33333b;
 }
 
 .secondary:hover {
-  background: #343c2d;
+  background: #313138;
 }
 
 /* Dashboard hero and totals */
@@ -282,8 +297,8 @@ main {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(110deg,#242e1d,#1a2317);
-  border: 1px solid #3a472e;
+  background: linear-gradient(110deg,#292e18,#171a14);
+  border: 1px solid var(--app-accent-border);
   border-radius: 14px;
   min-height: 300px;
   display: flex;
@@ -301,14 +316,14 @@ main {
   gap: 7px;
   font-size: 8px;
   letter-spacing: 1.4px;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .pill>span {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #c4ef79;
+  background: var(--app-accent);
 }
 
 .hero h2 {
@@ -320,18 +335,18 @@ main {
 
 .hero h2 em {
   font-style: normal;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .hero p {
   font-size: 12px;
   line-height: 1.8;
-  color: #adb9a1;
+  color: #a9a9b1;
 }
 
 .hero-button {
-  background: #c4ef79;
-  color: #1a2413;
+  background: var(--app-accent);
+  color: var(--app-accent-foreground);
   margin-top: 21px;
 }
 
@@ -343,12 +358,12 @@ main {
   height: 100%;
   display: grid;
   place-items: center;
-  background: radial-gradient(ellipse at center,#768c3c33,transparent 70%);
+  background: radial-gradient(ellipse at center,#e8ff3d20,transparent 70%);
 }
 
 .orbit {
   position: absolute;
-  border: 1px solid #83985b24;
+  border: 1px solid #e8ff3d24;
   border-radius: 50%;
   width: 260px;
   height: 260px;
@@ -363,7 +378,7 @@ main {
 .hero-dumbbell {
   width: 155px;
   height: 155px;
-  color: #c4ef79;
+  color: var(--app-accent);
   transform: rotate(-28deg);
   filter: drop-shadow(12px 16px 20px #0008);
 }
@@ -373,7 +388,7 @@ main {
   bottom: 27px;
   font-size: 8px;
   letter-spacing: 3px;
-  color: #9caa88;
+  color: #94949e;
 }
 
 .stats {
@@ -384,19 +399,19 @@ main {
 }
 
 .stat {
-  background: #191c18;
-  border: 1px solid #2a3026;
+  background: var(--app-surface);
+  border: 1px solid #28282e;
   border-radius: 10px;
   padding: 21px;
 }
 
 .stat .flex {
   font-size: 12px;
-  color: #9aa291;
+  color: #94949f;
 }
 
 .stat svg {
-  color: #899779;
+  color: #82828e;
 }
 
 .stat strong {
@@ -409,7 +424,7 @@ main {
 
 .stat p {
   font-size: 10px;
-  color: #737e69;
+  color: #6e6e79;
 }
 
 .section-heading {
@@ -435,8 +450,8 @@ main {
 .count {
   font-size: 10px;
   padding: 2px 7px;
-  background: #2b3423;
-  color: #c4ef79;
+  background: #28282f;
+  color: var(--app-accent);
   border-radius: 4px;
 }
 
@@ -446,7 +461,7 @@ main {
   align-items: center;
   background: none;
   border: 0;
-  color: #bec8b4;
+  color: #bbbbc1;
   font-size: 11px;
 }
 
@@ -455,18 +470,18 @@ main {
   align-items: center;
   flex-direction: column;
   text-align: center;
-  border: 1px dashed #343d2d;
+  border: 1px dashed #313139;
   border-radius: 12px;
   padding: 42px 20px;
-  background: #171b16;
+  background: #17171a;
 }
 
 .empty-icon {
   display: grid;
   place-items: center;
-  color: #b4d48a;
-  border: 1px solid #38452c;
-  background: #222c1b;
+  color: #edf5b4;
+  border: 1px solid #35353c;
+  background: #212126;
   width: 58px;
   height: 58px;
   border-radius: 14px;
@@ -474,7 +489,7 @@ main {
 }
 
 .empty p {
-  color: #8c9881;
+  color: #878792;
   font-size: 13px;
   line-height: 1.8;
   margin: 12px 0 24px;
@@ -493,8 +508,8 @@ main {
 }
 
 .plan-card {
-  background: #191d17;
-  border: 1px solid #30382a;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 23px;
   min-width: 0;
@@ -506,7 +521,7 @@ main {
 .plan-number {
   font-size: 9px;
   letter-spacing: 1.8px;
-  color: #8d9b80;
+  color: #888893;
 }
 
 .plan-card h3 {
@@ -517,7 +532,7 @@ main {
 .plan-description {
   font-size: 12px;
   line-height: 1.7;
-  color: #8e9c80;
+  color: #888894;
   overflow-wrap: anywhere;
 }
 
@@ -529,7 +544,7 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  border-top: 1px solid #2b3325;
+  border-top: 1px solid #29292f;
   padding: 12px 0;
   font-size: 12px;
 }
@@ -539,23 +554,23 @@ main {
 }
 
 .exercise-list small {
-  color: #c0d7a3;
+  color: #babac0;
   white-space: nowrap;
 }
 
 .plan-footer {
-  border-top: 1px solid #2b3325;
+  border-top: 1px solid #29292f;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-top: 14px;
-  color: #8e9c80;
+  color: #888894;
   font-size: 11px;
 }
 
 .icon-button {
   background: transparent;
-  color: #a7b49b;
+  color: var(--app-muted);
   border: 0;
   border-radius: 5px;
   padding: 7px;
@@ -565,8 +580,8 @@ main {
 }
 
 .icon-button:hover {
-  background: #343e2b;
-  color: #d2edb2;
+  background: #313138;
+  color: #edf5b4;
 }
 
 .error {
@@ -595,7 +610,7 @@ main {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #c4ef79;
+  color: var(--app-accent);
   margin-bottom: 20px;
 }
 
@@ -610,7 +625,7 @@ main {
 .page-footer {
   display: flex;
   justify-content: space-between;
-  color: #5e6b55;
+  color: #595967;
   font-size: 9px;
   padding: 36px 0 10px;
   letter-spacing: 1px;
@@ -623,9 +638,9 @@ main {
 /* Dialogs and form fields */
 
 dialog {
-  color: #e9efdf;
-  background: #191e16;
-  border: 1px solid #435237;
+  color: #e6e6e8;
+  background: var(--app-surface);
+  border: 1px solid #404049;
   border-radius: 14px;
   padding: 28px;
   width: min(640px,calc(100% - 24px));
@@ -645,16 +660,16 @@ dialog h2 {
 label {
   display: block;
   font-size: 12px;
-  color: #b1bda7;
+  color: #aeaeb6;
   margin-top: 19px;
 }
 
 input, textarea {
   display: block;
-  background: #10150d;
-  border: 1px solid #39462f;
+  background: var(--app-input);
+  border: 1px solid var(--app-input-border);
   border-radius: 6px;
-  color: #edf4e3;
+  color: var(--app-text);
   width: 100%;
   padding: 11px;
   font: inherit;
@@ -662,7 +677,7 @@ input, textarea {
 }
 
 input:focus, textarea:focus {
-  outline: 2px solid #a1c36d;
+  outline: 2px solid var(--app-accent);
   outline-offset: 1px;
 }
 
@@ -690,7 +705,7 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  border-top: 1px solid #35412c;
+  border-top: 1px solid var(--app-border);
   padding-top: 22px;
   margin-top: 25px;
 }
@@ -753,9 +768,9 @@ textarea {
     height: 73px;
     z-index: 5;
     padding: 7px 5px;
-    border-top: 1px solid #343d2b;
+    border-top: 1px solid #303038;
     border-right: 0;
-    background: #151a12;
+    background: #141418;
   }
   .brand, .sidebar-label, .sidebar-bottom {
     display: none;
@@ -877,14 +892,14 @@ textarea {
   justify-content: space-between;
   gap: 16px;
   padding: 18px 20px;
-  border: 1px solid #506338;
-  background: #25331b;
+  border: 1px solid var(--app-accent-border);
+  background: var(--app-accent-surface);
   border-radius: 10px;
 }
 
 .active-workout strong {
   font-size: 13px;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .active-workout p {
@@ -906,7 +921,7 @@ textarea {
 .logged-exercise {
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid #35412c;
+  border-top: 1px solid var(--app-border);
 }
 
 .logged-exercise h3 {
@@ -927,7 +942,7 @@ textarea {
 
 .logged-set .set-label {
   font-size: 12px;
-  color: #a7b49b;
+  color: var(--app-muted);
   padding-bottom: 14px;
 }
 
@@ -953,7 +968,7 @@ textarea {
 }
 
 .history-card details {
-  border-top: 1px solid #35412c;
+  border-top: 1px solid var(--app-border);
   margin-top: 20px;
   padding-top: 15px;
 }
@@ -961,7 +976,7 @@ textarea {
 .history-card summary {
   cursor: pointer;
   font-size: 13px;
-  color: #c4ef79;
+  color: var(--app-accent);
   padding: 6px 0;
 }
 
@@ -984,7 +999,7 @@ textarea {
 .workout-footer {
   position: sticky;
   bottom: -28px;
-  background: #191e16;
+  background: var(--app-surface);
   padding-bottom: 10px;
 }
 
@@ -1026,8 +1041,8 @@ textarea {
   grid-template-columns: minmax(170px,2fr) minmax(130px,1fr) minmax(130px,1fr) auto;
   align-items: end;
   gap: 16px;
-  background: #191d17;
-  border: 1px solid #30382a;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
@@ -1047,16 +1062,16 @@ textarea {
   width: 100%;
   margin-top: 8px;
   padding: 11px;
-  background: #10150d;
-  border: 1px solid #39462f;
+  background: var(--app-input);
+  border: 1px solid var(--app-input-border);
   border-radius: 6px;
-  color: #edf4e3;
+  color: var(--app-text);
   font: inherit;
   min-height: 41px;
 }
 
 .progress-filters select:focus-visible {
-  outline: 2px solid #a1c36d;
+  outline: 2px solid var(--app-accent);
   outline-offset: 1px;
 }
 
@@ -1066,7 +1081,7 @@ textarea {
 
 .progress-stats .stat>div {
   font-size: 12px;
-  color: #9aa291;
+  color: #94949f;
 }
 
 .progress-stats strong {
@@ -1076,7 +1091,7 @@ textarea {
 
 .progress-stats small {
   font-size: 13px;
-  color: #a7b49b;
+  color: var(--app-muted);
   letter-spacing: 0;
 }
 
@@ -1091,9 +1106,9 @@ textarea {
 }
 
 .progress-chart-card {
-  border: 1px solid #30382a;
+  border: 1px solid var(--app-border);
   border-radius: 12px;
-  background: #191d17;
+  background: var(--app-surface);
   min-width: 0;
   padding: 22px 10px 16px;
 }
@@ -1119,13 +1134,13 @@ textarea {
 
 .chart-unit {
   font-size: 10px;
-  color: #909d83;
+  color: var(--app-muted);
   margin: 0 12px;
 }
 
 .progress-tooltip {
-  background: #252e1e;
-  border: 1px solid #657d45;
+  background: #232329;
+  border: 1px solid #5a5a68;
   border-radius: 8px;
   padding: 12px;
   max-width: 260px;
@@ -1138,41 +1153,41 @@ textarea {
 }
 
 .progress-tooltip p {
-  color: #a7b49b;
+  color: var(--app-muted);
   margin: 6px 0;
   overflow-wrap: anywhere;
 }
 
 .progress-tooltip span {
-  color: #d0f3a2;
+  color: #edf5b4;
 }
 
 .progress-hint {
   font-size: 12px;
-  color: #bed59f;
+  color: #b7b7bd;
   margin-bottom: 20px;
   padding: 12px 16px;
-  background: #222d1a;
+  background: #212126;
   border-radius: 8px;
 }
 
 .progress-note {
   font-size: 11px;
   line-height: 1.8;
-  color: #909d83;
+  color: var(--app-muted);
   margin-top: 22px;
 }
 
 .progress-data {
-  border: 1px solid #30382a;
+  border: 1px solid var(--app-border);
   border-radius: 12px;
-  background: #191d17;
+  background: var(--app-surface);
   margin-top: 20px;
   padding: 18px 22px;
 }
 
 .progress-data summary {
-  color: #c4ef79;
+  color: var(--app-accent);
   font-size: 13px;
   cursor: pointer;
   padding: 3px 0;
@@ -1192,18 +1207,18 @@ textarea {
 
 .progress-data caption {
   text-align: left;
-  color: #a7b49b;
+  color: var(--app-muted);
   margin-bottom: 14px;
 }
 
 .progress-data th, .progress-data td {
   padding: 13px 10px;
-  border-top: 1px solid #30382a;
+  border-top: 1px solid var(--app-border);
   vertical-align: top;
 }
 
 .progress-data th {
-  color: #a7b49b;
+  color: var(--app-muted);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1267,15 +1282,15 @@ textarea {
   min-width: 0;
   padding: 11px 7px;
   margin-top: 8px;
-  background: #10150d;
-  border: 1px solid #39462f;
+  background: var(--app-input);
+  border: 1px solid var(--app-input-border);
   border-radius: 6px;
-  color: #edf4e3;
+  color: var(--app-text);
   font: inherit;
 }
 
 .exercise-picker select:focus-visible {
-  outline: 2px solid #a1c36d;
+  outline: 2px solid var(--app-accent);
 }
 
 .picker-add {
@@ -1319,7 +1334,7 @@ textarea {
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: #c4ef79;
+  accent-color: var(--app-accent);
 }
 
 .workout-fields:disabled .logged-set {
@@ -1345,16 +1360,16 @@ textarea {
 .rest-timer {
   margin-top: 20px;
   padding: 18px;
-  border: 1px solid #536b3c;
+  border: 1px solid var(--app-accent-border);
   border-radius: 10px;
-  background: #202e18;
+  background: var(--app-accent-surface);
 }
 
 .rest-timer-heading {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .rest-timer-heading h3 {
@@ -1363,7 +1378,7 @@ textarea {
 
 .rest-timer-heading p {
   margin-top: 4px;
-  color: #a9b99b;
+  color: #a6a6ae;
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -1373,19 +1388,19 @@ textarea {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: 1px;
-  color: #d4f6a2;
+  color: #edf5b4;
   margin-top: 12px;
 }
 
 .rest-timer-status {
-  color: #b0c29f;
+  color: #adadb4;
   font-size: 12px;
   line-height: 1.6;
   margin-top: 4px;
 }
 
 .rest-complete {
-  border-color: #c4ef79;
+  border-color: var(--app-accent);
 }
 
 .rest-timer-controls, .exercise-set-actions {
@@ -1404,16 +1419,16 @@ textarea {
 .previous-workout {
   margin-top: 12px;
   padding: 12px 14px;
-  border: 1px solid #35412c;
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  background: #131c0f;
+  background: #141418;
   font-size: 12px;
   line-height: 1.7;
-  color: #a7b69b;
+  color: #a4a4ad;
 }
 
 .previous-workout strong {
-  color: #cfdfc1;
+  color: #ceced2;
   font-weight: 500;
 }
 
@@ -1423,7 +1438,7 @@ textarea {
 
 .previous-workout p + p {
   margin-top: 4px;
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .flexible-set.with-previous {
@@ -1440,13 +1455,13 @@ textarea {
 
 .previous-set span {
   display: block;
-  color: #8c9d7d;
+  color: #878793;
 }
 
 .previous-set strong {
   display: block;
   font-weight: 500;
-  color: #c3d7b2;
+  color: #c2c2c7;
   overflow-wrap: anywhere;
 }
 
@@ -1492,8 +1507,8 @@ textarea {
   display: flex;
   gap: 15px;
   align-items: end;
-  background: #191d17;
-  border: 1px solid #30382a;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -1505,8 +1520,44 @@ textarea {
   flex: 1;
 }
 
-.catalog-search {
-  max-width: 500px;
+.catalog-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, .65fr) auto;
+  align-items: end;
+  gap: 16px;
+}
+
+.catalog-filters label {
+  min-width: 0;
+  margin: 0;
+}
+
+.catalog-filters input, .catalog-filters select {
+  min-width: 0;
+}
+
+.catalog-filters select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px;
+  background: var(--app-input);
+  border: 1px solid var(--app-input-border);
+  border-radius: 6px;
+  color: var(--app-text);
+  font: inherit;
+}
+
+.catalog-filters select:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+@media (max-width: 700px) {
+  .catalog-filters {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
 }
 
 .catalog-list {
@@ -1520,8 +1571,8 @@ textarea {
 
 .catalog-list li {
   padding: 15px 18px;
-  border: 1px solid #30382a;
-  background: #191d17;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
   border-radius: 8px;
   overflow-wrap: anywhere;
   font-size: 14px;
@@ -1556,8 +1607,8 @@ textarea {
 
 .upcoming-workout {
   padding: 23px 25px;
-  background: #1d2618;
-  border: 1px solid #425334;
+  background: var(--app-accent-surface);
+  border: 1px solid var(--app-accent-border);
   border-radius: 12px;
   margin: 24px 0;
   display: block;
@@ -1570,8 +1621,8 @@ textarea {
   width: 46px;
   height: 46px;
   border-radius: 12px;
-  background: #303e24;
-  color: #c4ef79;
+  background: #353d20;
+  color: var(--app-accent);
 }
 
 .upcoming-copy {
@@ -1597,8 +1648,8 @@ textarea {
 
 .calendar-panel, .schedule-day-panel {
   padding: 22px;
-  background: #191d17;
-  border: 1px solid #30382a;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   min-width: 0;
 }
@@ -1624,7 +1675,7 @@ textarea {
 
 .month-calendar th {
   font-size: 10px;
-  color: #909d83;
+  color: var(--app-muted);
   font-weight: 500;
   padding: 7px 0;
 }
@@ -1641,32 +1692,56 @@ textarea {
   min-height: 94px;
   padding: 9px 5px 6px;
   text-align: left;
-  background: #20271b;
+  background: #1f1f23;
   border: 1px solid transparent;
   border-radius: 7px;
   display: flex;
   flex-direction: column;
   gap: 7px;
-  color: #d8e1d0;
+  color: #d7d7da;
+}
+
+.calendar-drag-help {
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.calendar-day.is-drop-target {
+  box-shadow: inset 0 0 0 2px var(--app-accent);
+  background: var(--app-accent-surface);
+}
+
+.calendar-event[draggable="true"], .scheduled-entry [draggable="true"] {
+  cursor: grab;
+}
+
+.calendar-event[draggable="true"]:active, .scheduled-entry [draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.calendar-event.is-dragging {
+  opacity: .5;
 }
 
 .calendar-day:hover {
-  background: #303c25;
+  background: #2d2d34;
 }
 
 .calendar-day.other-month {
-  background: #141a10;
-  color: #75816b;
+  background: #141416;
+  color: #70707c;
 }
 
 .calendar-day.is-selected {
-  border-color: #c4ef79;
-  background: #344528;
+  border-color: var(--app-accent);
+  background: #414d20;
 }
 
 .calendar-day.is-today .calendar-day-number {
-  background: #c4ef79;
-  color: #1a2512;
+  background: var(--app-accent);
+  color: var(--app-accent-foreground);
   border-radius: 50%;
 }
 
@@ -1696,8 +1771,8 @@ textarea {
   font-size: 9px;
   min-width: 0;
   border: 0;
-  background: #35462a;
-  color: #d5edbd;
+  background: #323b20;
+  color: #edf5b4;
   border-radius: 4px;
   padding: 5px 4px;
   text-align: left;
@@ -1717,21 +1792,21 @@ textarea {
   height: 5px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #c4ef79;
+  background: var(--app-accent);
 }
 
 .calendar-event.is-done .calendar-event-dot, .calendar-legend .done-dot {
-  background: #6c9fb2;
+  background: #83a5c9;
 }
 
 .calendar-event.is-done {
-  color: #9fbdc7;
-  background: #263b41;
+  color: #b5c6da;
+  background: #242b36;
 }
 
 .calendar-more {
   font-size: 9px;
-  color: #a7b49b;
+  color: var(--app-muted);
   border: 0;
   background: transparent;
   text-align: left;
@@ -1742,7 +1817,7 @@ textarea {
   display: flex;
   gap: 18px;
   margin-top: 16px;
-  color: #909d83;
+  color: var(--app-muted);
   font-size: 10px;
 }
 
@@ -1769,8 +1844,8 @@ textarea {
 
 .scheduled-entry {
   padding: 17px;
-  background: #222b1b;
-  border: 1px solid #38472c;
+  background: #212125;
+  border: 1px solid #35353e;
   border-radius: 9px;
 }
 
@@ -1786,7 +1861,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #b2cd92;
+  color: #acacb3;
   margin-top: 9px;
 }
 
@@ -1800,23 +1875,23 @@ textarea {
 }
 
 .schedule-empty>svg {
-  color: #b4d48a;
+  color: #edf5b4;
 }
 
 dialog select {
   display: block;
   width: 100%;
   margin-top: 8px;
-  background: #10150d;
-  border: 1px solid #39462f;
+  background: var(--app-input);
+  border: 1px solid var(--app-input-border);
   border-radius: 6px;
-  color: #edf4e3;
+  color: var(--app-text);
   padding: 11px;
   font: inherit;
 }
 
 dialog select:focus-visible {
-  outline: 2px solid #a1c36d;
+  outline: 2px solid var(--app-accent);
   outline-offset: 1px;
 }
 
@@ -1907,11 +1982,11 @@ dialog select:focus-visible {
 }
 
 .calendar-event:hover {
-  background: #4a603a;
+  background: #49572b;
 }
 
 .calendar-event.is-done:hover {
-  background: #34505a;
+  background: #323c4b;
 }
 
 .plan-title-button {
@@ -1924,12 +1999,12 @@ dialog select:focus-visible {
   text-align: left;
   overflow-wrap: anywhere;
   text-decoration: underline;
-  text-decoration-color: #6b8250;
+  text-decoration-color: #899b47;
   text-underline-offset: 4px;
 }
 
 .plan-title-button:hover {
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 .scheduled-plan-details h2 {
@@ -1940,7 +2015,7 @@ dialog select:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #a7b49b;
+  color: var(--app-muted);
   font-size: 13px;
   margin: 18px 0;
   line-height: 1.6;
@@ -1953,7 +2028,7 @@ dialog select:focus-visible {
 .plan-detail-description {
   font-size: 14px;
   line-height: 1.8;
-  color: #bac6b0;
+  color: #b8b8be;
   margin-top: 18px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -1968,12 +2043,12 @@ dialog select:focus-visible {
 
 .plan-detail-table th, .plan-detail-table td {
   padding: 14px 10px;
-  border-top: 1px solid #35412c;
+  border-top: 1px solid var(--app-border);
   vertical-align: top;
 }
 
 .plan-detail-table thead th {
-  color: #a7b49b;
+  color: var(--app-muted);
   font-size: 11px;
   font-weight: 500;
 }
@@ -1988,7 +2063,7 @@ dialog select:focus-visible {
 }
 
 .plan-detail-table td {
-  color: #c4ef79;
+  color: var(--app-accent);
 }
 
 @media (max-width:700px) {
@@ -2026,7 +2101,7 @@ dialog select:focus-visible {
 }
 
 .calendar-date-select:focus-visible::after {
-  outline: 2px solid #c4ef79;
+  outline: 2px solid var(--app-accent);
   outline-offset: 2px;
 }
 
@@ -2052,8 +2127,8 @@ dialog select:focus-visible {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  border: 1px solid #3d4c31;
-  background: #25311e;
+  border: 1px solid #505d2d;
+  background: #2a301d;
   border-radius: 9px;
 }
 
@@ -2088,8 +2163,8 @@ dialog select:focus-visible {
 .account-card {
   width: min(100%, 440px);
   padding: 32px;
-  border: 1px solid #39462f;
-  background: #191e16;
+  border: 1px solid var(--app-input-border);
+  background: var(--app-surface);
   border-radius: 16px;
 }
 
@@ -2143,19 +2218,19 @@ dialog select:focus-visible {
   justify-content: space-between;
   gap: 18px;
   padding: 18px 20px;
-  background: #202b1a;
-  border: 1px solid #425334;
+  background: var(--app-accent-surface);
+  border: 1px solid var(--app-accent-border);
   border-radius: 10px;
   margin-bottom: 22px;
 }
 
 .guest-banner strong {
-  color: #c4ef79;
+  color: var(--app-accent);
   font-size: 14px;
 }
 
 .guest-banner p {
-  color: #adbba1;
+  color: #aaaab2;
   font-size: 12px;
   line-height: 1.6;
   margin-top: 5px;
@@ -2169,7 +2244,7 @@ dialog select:focus-visible {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: #101211;
+  background: var(--app-background);
   overflow-y: auto;
 }
 
@@ -2188,13 +2263,73 @@ dialog select:focus-visible {
 
 /* Plan editor and muscle labels */
 
+/* Plan exercise ordering: drag on desktop, arrow controls on all devices. */
+.exercise-order-help {
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.plan-exercise-row {
+  position: relative;
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+}
+
+.plan-exercise-row.is-dragging {
+  opacity: .55;
+}
+
+.plan-exercise-row.drop-before {
+  box-shadow: inset 0 3px 0 var(--app-accent);
+}
+
+.plan-exercise-row.drop-after {
+  box-shadow: inset 0 -3px 0 var(--app-accent);
+}
+
+.exercise-order-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.exercise-drag-handle {
+  cursor: grab;
+}
+
+.exercise-drag-handle:active {
+  cursor: grabbing;
+}
+
+.exercise-move-buttons {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.exercise-order-controls button {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+@media (pointer: coarse) {
+  .exercise-order-controls button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 .plan-exercise-input {
   grid-template-columns: minmax(0, 1fr) 58px 58px 80px 30px;
 }
 
 .plan-rest {
   display: block;
-  color: #909d83;
+  color: var(--app-muted);
   font-size: 10px;
   margin-top: 3px;
 }
@@ -2219,13 +2354,13 @@ dialog select:focus-visible {
 
 .exercise-muscles p {
   font-size: 11px;
-  color: #97a58b;
+  color: #93939d;
   line-height: 1.65;
   white-space: normal;
 }
 
 .exercise-muscles strong {
-  color: #bdcdb0;
+  color: #bbbbc2;
   font-weight: 500;
 }
 
@@ -2273,9 +2408,9 @@ dialog select:focus-visible {
 .plan-muscle-map {
   margin-top: 24px;
   padding: 20px;
-  border: 1px solid #35452f;
+  border: 1px solid var(--app-border);
   border-radius: 12px;
-  background: #11190f;
+  background: #121216;
 }
 
 .body-views {
@@ -2298,39 +2433,39 @@ dialog select:focus-visible {
 }
 
 .body-view figcaption {
-  color: #a1ae96;
+  color: #9d9da7;
   font-size: 11px;
   margin-top: 8px;
 }
 
 .body-outline {
-  fill: #263128;
-  stroke: #51614d;
+  fill: #28282f;
+  stroke: #51515d;
   stroke-width: 1.3;
   stroke-linejoin: round;
 }
 
 .body-muscle {
-  stroke: #11190f;
+  stroke: #121216;
   stroke-width: 1.3;
   stroke-linejoin: round;
 }
 
 .body-muscle.inactive {
-  fill: #3b493b;
+  fill: #3d3d47;
 }
 
 .body-muscle.primary {
-  fill: #c4ef79;
+  fill: var(--app-accent);
 }
 
 .body-muscle.secondary {
-  fill: #eeac65;
+  fill: var(--app-muscle-secondary);
 }
 
 .body-detail {
   fill: none;
-  stroke: #63735c;
+  stroke: #60606f;
   stroke-width: 1;
 }
 
@@ -2340,7 +2475,7 @@ dialog select:focus-visible {
   flex-wrap: wrap;
   gap: 10px 18px;
   font-size: 11px;
-  color: #b7c5ac;
+  color: #b5b5bc;
 }
 
 .muscle-map-legend > span {
@@ -2357,16 +2492,16 @@ dialog select:focus-visible {
 }
 
 .primary-dot {
-  background: #c4ef79;
+  background: var(--app-accent);
 }
 
 .secondary-dot {
-  background: #eeac65;
+  background: var(--app-muscle-secondary);
 }
 
 .inactive-dot {
-  background: #3b493b;
-  border: 1px solid #63735c;
+  background: #3d3d47;
+  border: 1px solid #60606f;
 }
 
 .plan-muscle-groups {
@@ -2379,11 +2514,11 @@ dialog select:focus-visible {
 .plan-muscle-groups h4 {
   font-size: 11px;
   font-weight: 600;
-  color: #d6e5ca;
+  color: #d6d6d9;
 }
 
 .plan-muscle-groups p {
-  color: #a6b59b;
+  color: #a4a4ac;
   line-height: 1.7;
   font-size: 12px;
   margin-top: 5px;
@@ -2433,8 +2568,8 @@ dialog select:focus-visible {
 /* Extend the title button across the card, with independent controls above it. */
 
 .plan-card:hover {
-  border-color: #6b8250;
-  background: #1d2519;
+  border-color: #899b47;
+  background: #1d1d21;
 }
 
 .plan-card-details::after {
@@ -2451,7 +2586,7 @@ dialog select:focus-visible {
 }
 
 .plan-card-details:focus-visible::after {
-  outline: 2px solid #c4ef79;
+  outline: 2px solid var(--app-accent);
   outline-offset: 3px;
 }
 
@@ -2484,7 +2619,7 @@ dialog select:focus-visible {
 .upcoming-message {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid #3d4c31;
+  border-top: 1px solid #505d2d;
 }
 
 .upcoming-message .muted {

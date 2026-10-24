@@ -41,3 +41,39 @@ export function planMuscleSummary(plan, catalog = []) {
   const unmapped = [...primary.values(), ...secondary.values()].filter(name => !bodyRegions[key(name)]);
   return { primary: [...primary.values()], secondary: [...secondary.values()], regions, unspecified, unmapped };
 }
+
+const muscleKey = value => (value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+
+export function primaryMuscleOptions(catalog = []) {
+  const options = new Map();
+  for (const exercise of catalog) for (const name of exercise.primaryMuscles || []) {
+    const value = muscleKey(name);
+    if (value && !options.has(value)) options.set(value, { value, label: name.trim().replace(/\s+/g, ' ') });
+  }
+  return [...options.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
+
+export function filterExercises(catalog, search = '', primaryMuscle = '') {
+  const query = muscleKey(search), muscle = muscleKey(primaryMuscle);
+  return catalog.filter(exercise => {
+    const matchesMuscle = !muscle || (exercise.primaryMuscles || []).some(name => muscleKey(name) === muscle);
+    const matchesSearch = !query || [exercise.name, ...(exercise.primaryMuscles || []), ...(exercise.secondaryMuscles || [])]
+      .some(value => muscleKey(value).includes(query));
+    return matchesMuscle && matchesSearch;
+  });
+}
+
+// Keep each option in one group, even when an exercise has multiple primary muscles.
+export function groupExercisesByPrimaryMuscle(catalog = []) {
+  const groups = new Map();
+  for (const exercise of catalog) {
+    const muscle = (exercise.primaryMuscles || []).find(name => muscleKey(name));
+    const key = muscle ? `muscle:${muscleKey(muscle)}` : 'unspecified';
+    if (!groups.has(key)) groups.set(key, {
+      key, label: muscle ? muscle.trim().replace(/\s+/g, ' ') : 'Other / unspecified', exercises: [],
+    });
+    groups.get(key).exercises.push(exercise);
+  }
+  return [...groups.values()].sort((a, b) => a.key === 'unspecified' ? 1 : b.key === 'unspecified' ? -1 : a.label.localeCompare(b.label))
+    .map(group => ({ ...group, exercises: group.exercises.sort((a, b) => a.name.localeCompare(b.name)) }));
+}
