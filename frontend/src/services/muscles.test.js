@@ -5,10 +5,12 @@ import { parseMuscles, findCatalogExercise } from './muscles.js';
 import { createGuestApi } from './guest.js';
 import defaults from './defaultExercises.json' with { type: 'json' };
 
-test('all 50 defaults carry consistent muscle labels in guest and backend catalogs', () => {
+test('all 130 defaults carry consistent muscle labels in guest and backend catalogs', () => {
   const backend = JSON.parse(readFileSync(new URL('../../../backend/src/main/resources/exercise-muscles.json', import.meta.url), 'utf8'));
   assert.deepEqual(defaults, backend);
-  assert.equal(defaults.length, 50);
+  assert.equal(defaults.length, 130);
+  const names = defaults.map(exercise => exercise.name.trim().replace(/\s+/g, ' ').toLowerCase());
+  assert.equal(new Set(names).size, defaults.length, 'Default exercise names must be unique');
   for (const exercise of defaults) {
     assert.ok(exercise.primaryMuscles.length > 0, exercise.name);
     assert.ok(Array.isArray(exercise.secondaryMuscles));

@@ -29,6 +29,11 @@ export const DRAFT_KEY = 'form-active-workout-v1';
 export function createWorkoutDraft(plan) {
   return { id: crypto.randomUUID(), planId: plan.id, planName: plan.name, startedAt: new Date().toISOString(), exercises: plan.exercises.map(exercise => ({ name: exercise.name, exerciseId: exercise.exerciseId ?? null, targetSets: exercise.targetSets, restSeconds: exercise.restSeconds ?? null, skipped: false, targetReps: exercise.targetReps, sets: Array.from({ length: exercise.targetSets }, () => ({ weight: '', reps: '' })) })) };
 }
+// Saving an unfinished workout does not validate completed sets or submit History.
+export function saveWorkoutDraft(draft, key = DRAFT_KEY) {
+  try { localStorage.setItem(key, JSON.stringify(draft)); }
+  catch { throw new Error('Could not save workout progress. Browser storage may be unavailable or full. Keep this page open and retry.'); }
+}
 export function readWorkoutDraft(key = DRAFT_KEY) {
   try {
     const draft = JSON.parse(localStorage.getItem(key));
@@ -82,4 +87,16 @@ export function previousExerciseSessions(draft, workouts = []) {
     }
     return null;
   });
+}
+
+// Preserve recorded exercise order and repeated blocks; skipped entries have no sets.
+export function completedWorkoutExercises(workout) {
+  const performed = groupWorkoutSets(workout.sets || []).map(exercise => ({
+    ...exercise, skipped: false, sets: [...exercise.sets].sort((a, b) => a.setNumber - b.setNumber),
+  }));
+  const skipped = (workout.skippedExercises || []).map(exercise => ({
+    name: exercise.exerciseName, exerciseId: exercise.exerciseId,
+    exerciseNumber: exercise.exerciseNumber, skipped: true, sets: [],
+  }));
+  return [...performed, ...skipped].sort((a, b) => a.exerciseNumber - b.exerciseNumber);
 }

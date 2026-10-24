@@ -3,13 +3,14 @@ import { formatRestTime, startRestTimer } from '../services/restTimer';
 import ExerciseMuscles from './ExerciseMuscles';
 import { previousExerciseSessions } from '../services/workouts';
 import { useEffect, useRef, useState } from 'react';
-import { Check, Plus, Trash2, X } from 'lucide-react';
+import { Check, Plus, Save, Trash2, X } from 'lucide-react';
 
-export default function WorkoutLogger({ catalog, workouts = [], historyLoading = false, historyError, onHistoryRetry, draft, onChange, onFinish, onClose, onDiscard, editing = false }) {
+export default function WorkoutLogger({ catalog, workouts = [], historyLoading = false, historyError, onHistoryRetry, draft, onChange, onFinish, onSaveDraft, guest = false, onClose, onDiscard, editing = false }) {
   const dialog = useRef(null);
   const previous = editing ? [] : previousExerciseSessions(draft, workouts);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [saveAction, setSaveAction] = useState(null);
   useEffect(() => { dialog.current.showModal(); }, []);
   function changeSet(exerciseIndex, setIndex, field, value) {
     onChange({ ...draft, exercises: draft.exercises.map((exercise, i) => i !== exerciseIndex ? exercise : { ...exercise, sets: exercise.sets.map((set, j) => j === setIndex ? { ...set, [field]: value } : set) }) });
@@ -26,8 +27,15 @@ export default function WorkoutLogger({ catalog, workouts = [], historyLoading =
   async function finish(event) {
     event.preventDefault();
     if (saving) return;
-    setSaving(true); setError('');
+    setSaving(true); setSaveAction('finish'); setError('');
     try { await onFinish(draft); } catch (error) { setError(error.message); } finally { setSaving(false); }
+  }
+  async function saveProgress() {
+    if (saving) return;
+    setSaving(true); setSaveAction('draft'); setError('');
+    try { await onSaveDraft(draft); }
+    catch (error) { setError(error.message); }
+    finally { setSaving(false); }
   }
   return <dialog ref={dialog} className="workout-dialog" aria-labelledby="workout-title" onCancel={event => { event.preventDefault(); if (!saving) onClose(); }}>
     <form onSubmit={finish}>
@@ -65,7 +73,17 @@ export default function WorkoutLogger({ catalog, workouts = [], historyLoading =
         </section>; })}
       </fieldset>
       {error && <p className="error mt-4" role="alert">{error}</p>}
-      <div className="editor-footer workout-footer"><button type="button" className="secondary" disabled={saving} onClick={onDiscard}>{editing ? 'Cancel editing' : 'Discard workout'}</button><button className="primary" disabled={saving}><Check size={16}/>{saving ? 'Saving…' : editing ? 'Save changes' : 'Finish workout'}</button></div>
+      {!editing && <p className="progress-note">{guest ? 'Save keeps your progress for this visit only.' : 'Save keeps your unfinished workout on this device.'} Finish workout adds the session to History.</p>}
+      <div className={`editor-footer workout-footer ${editing ? '' : 'workout-footer-active'}`}>
+        {editing ? <>
+          <button type="button" className="secondary" disabled={saving} onClick={onDiscard}>Cancel editing</button>
+          <button type="submit" className="primary" disabled={saving}><Check size={16}/>{saving ? 'Saving…' : 'Save changes'}</button>
+        </> : <>
+          <button type="submit" className="secondary finish-workout" disabled={saving}><Check size={16}/>{saving && saveAction === 'finish' ? 'Finishing…' : 'Finish workout'}</button>
+          <button type="button" className="text-button discard-workout" disabled={saving} onClick={onDiscard}>Discard workout</button>
+          <button type="button" className="primary save-workout-progress" disabled={saving} onClick={saveProgress}><Save size={16}/>{saving && saveAction === 'draft' ? 'Saving…' : 'Save'}</button>
+        </>}
+      </div>
     </form>
   </dialog>;
 }

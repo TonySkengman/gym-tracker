@@ -62,7 +62,7 @@ Saved sessions contain a snapshot of the plan and sets. Editing or deleting the 
 
 ## Schedule workouts
 
-Open **Schedule** to use the Monday-first month calendar. Select a day and click **Add workout**, choose a saved plan, and save. You can schedule different plans on the same day. A plan can only be assigned once per date; duplicate bookings return an error instead of appearing twice. Use the month arrows or **Today** to navigate. Each date shows scheduled-workout markers; the selected-day list shows full names and completion status. Click a workout marker/name in the calendar, the selected-day list or the Next workout card to open its plan details, including description, exercise order, target sets and target reps. The detail view shows the current saved plan, not the actual results from a completed session, and can start an uncompleted scheduled workout. Deleted plans show an unavailable message instead of invented details.
+Open **Schedule** to use the Monday-first month calendar. Select a day and click **Add workout**, choose a saved plan, and save. You can schedule different plans on the same day. A plan can only be assigned once per date; duplicate bookings return an error instead of appearing twice. Use the month arrows or **Today** to navigate. Each date shows scheduled-workout markers; the selected-day list shows full names and completion status. Click a workout marker/name in the calendar, the selected-day list or the Next workout card to open its plan details, including description, exercise order, target sets and target reps. Upcoming entries show the current saved plan and can start or resume the scheduled workout. Completed entries open the linked session’s recorded exercises, weights and reps for each set, skipped exercises, completion time and duration. These results remain available if the source plan changes or is deleted; edits in History are reflected here too. Deleted plans without a completed session show an unavailable message.
 
 The **Next workout** card on both Schedule and Dashboard selects the earliest uncompleted booking on or after today. Same-day entries use the order they were added. Completed entries, past dates and deleted plans are excluded. Scheduling is date-only, without times or recurring bookings. Dates use the browser's local calendar rather than UTC timestamps, and the upcoming calculation checks for a new local date once per minute while the app is open.
 
@@ -279,7 +279,7 @@ Restart the backend, refresh the app, then open **Schedule**. Add a temporary bo
 
 ## Guest mode
 
-The dashboard opens without requiring login. Guests can create/edit/delete plans, use the built-in 50-exercise catalog, add temporary exercises, schedule workouts, record sets, edit History and view Progress for the current visit. Guest data lives only in memory: it is not sent to the backend and is not stored in localStorage, sessionStorage or PostgreSQL. Refreshing, closing or leaving the app clears it.
+The dashboard opens without requiring login. Guests can create/edit/delete plans, use the built-in 130-exercise catalog, add temporary exercises, schedule workouts, record sets, edit History and view Progress for the current visit. Guest data lives only in memory: it is not sent to the backend and is not stored in localStorage, sessionStorage or PostgreSQL. Refreshing, closing or leaving the app clears it.
 
 The **Guest mode** notice and **Log in / Register** actions explain how to keep future training. Opening the account form and choosing **Continue as guest** preserves the current guest workspace and unfinished workout. Successful registration/login opens the account’s saved workspace and discards guest data; it does not automatically import guest records. Logout opens a fresh guest workspace. Guest functionality works even if the backend is unavailable; account access requires the backend and PostgreSQL.
 
@@ -289,7 +289,7 @@ Manual check: open while signed out, create a temporary plan, schedule and compl
 
 To keep your training between visits, register with your name, email and password (8–72 characters, at most 72 UTF-8 bytes), then log in using your email and password. Registration signs you in automatically. Use **Log out** to end the session. Refresh restores an active session; sessions expire after 30 minutes without server activity. Passwords are hashed with BCrypt and never returned by the API. Authentication uses an HttpOnly, SameSite=Lax session cookie, not a browser-stored JWT.
 
-Plans, calendar bookings, workout History and Progress belong to the signed-in user. Other users’ record IDs return 404. Exercise names form a shared catalog, seeded with 50 common gym exercises; signed-in users can add names. Unfinished browser drafts use separate keys per account and can be resumed after logging back in on the same browser. Old unowned browser drafts are not imported.
+Plans, calendar bookings, workout History and Progress belong to the signed-in user. Other users’ record IDs return 404. Exercise names form a shared catalog, seeded with 130 common gym exercises; signed-in users can add names. Unfinished browser drafts use separate keys per account and can be resumed after logging back in on the same browser. Old unowned browser drafts are not imported.
 
 All data endpoints require authentication. For non-GET requests, fetch `/api/auth/csrf` first and send its `token` under the returned `headerName`, keeping the session cookie. Fetch a fresh token after login, registration or logout. The frontend handles this automatically through `services/auth.js`.
 
@@ -319,7 +319,7 @@ Use your configured database username/name if different. The transaction stops i
 4. Log out and log back into A; confirm its data persisted and B’s plan is absent.
 5. Start a workout as A, minimize it and refresh. Log out and into B; A’s draft must not appear. Log back into A to resume it.
 
-Current verification: 66 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
+Current verification: 82 frontend tests, 25 backend tests and both production builds pass. Automated authentication coverage uses the real Spring Security filter chain with H2: anonymous access, missing CSRF, hashed passwords, normalized email uniqueness, login errors, session rotation/logout, private list results and cross-account ID access. Actual PostgreSQL and browser interactions still need the manual check above.
 
 Guest regression tests exercise the full temporary plan/schedule/history flow with network and browser storage disabled, verify visit isolation, and reject incomplete recorded sets.
 
@@ -331,7 +331,7 @@ Plan API exercise objects accept optional `restSeconds` (integer or null). Updat
 
 ### Exercise muscles
 
-All 50 built-in exercises include primary and secondary muscle labels. For example, bench press lists Chest as primary and Triceps/Front delts as secondary. Labels appear in the catalog, exercise picker, plan cards, scheduled plan details and active workout screen. Catalog search also matches muscle names.
+All 130 built-in exercises include primary and secondary muscle labels. For example, bench press lists Chest as primary and Triceps/Front delts as secondary. Labels appear in the catalog, exercise picker, plan cards, scheduled plan details and active workout screen. Catalog search also matches muscle names.
 
 Custom exercises accept optional comma-separated primary and secondary muscles (up to 8 labels per group, 40 characters per label). Unknown custom exercises show unspecified labels rather than guessing from the name. Metadata belongs to the shared exercise catalog; existing plan and history IDs are preserved. Restart the backend to create the muscle tables and backfill defaults. Previously assigned muscle labels are not overwritten on startup.
 
@@ -380,3 +380,26 @@ When creating or editing a plan, drag an exercise’s grip handle and drop above
 In **Schedule**, drag a planned workout marker (or its title in the selected-day list) onto another visible calendar date. The target day is highlighted, and the existing booking’s date is saved before the calendar and Next workout update. Dropping onto the same day does nothing. The visible adjacent-month dates also accept drops. Use the existing pencil **Reschedule** control for other months, mobile and keyboard use.
 
 Completed workouts and bookings with deleted plans cannot be dragged. Duplicate bookings show an error, and failed saves leave the original date intact. Moves preserve the booking ID and its connection to an active workout. Account moves use the existing PUT schedule endpoint; guest moves remain temporary. Manual check: move a disposable booking, refresh while signed in, and confirm its new date; also try a duplicate destination and cancelling a drag.
+
+### Save an unfinished workout
+
+The active workout footer has **Finish workout** on the left and **Save** on the right. Save keeps partially entered sets without submitting a completed session, closes the logger and leaves **Resume workout** available. Signed-in users’ drafts are saved under their account’s browser storage key; guest drafts are kept only for the current visit. Save failures stay visible in the logger so you can retry without losing your inputs. Finish workout still validates recorded sets and submits the session to History. Editing completed History keeps its existing Cancel / Save changes controls.
+
+### Duplicate workout plans
+
+Use the **Duplicate plan** copy icon beside Edit/Delete on a plan card. An editor opens with a suggested name such as `Upper (copy)`, plus the original description, exercise order, catalog identities, sets, reps and rest targets. Adjust it and press **Save plan** to create a separate routine, or Cancel to leave everything unchanged. Names are shortened to the 100-character limit when needed and numbered if the suggested copy name already exists.
+
+Copies never inherit the source plan’s ID, ownership, schedule bookings or completed workouts. Guest copies remain temporary; signed-in copies use the existing plan creation API.
+
+The catalog includes 130 distinct exercises with primary and secondary muscle labels. Restart the backend to add new defaults to an existing database; existing exercise IDs and custom muscle labels are preserved. Guest mode uses the same expanded catalog after refreshing.
+
+
+### Personal records
+
+Open **Progress** and select an exercise to see its all-time heaviest set and best recorded weight at each exact rep count. Records show the achievement date and link to the completed workout with its actual sets. The date range filters only the charts and session statistics; the records section always uses all completed sessions.
+
+Finishing a workout opens a summary with first benchmarks and new records, the previous best and weight improvement. Equal weights do not count as improvements and keep the earliest achievement. Repeated exercise blocks are compared together by catalog identity, while the winning exercise/set number stays attached to each record. Legacy entries without a catalog ID use normalized names and are kept separate from identified entries. A 0 kg set is a valid no-added-weight benchmark; skipped exercises do not produce records. No one-rep max or bodyweight load is estimated.
+
+Records are calculated from saved History rather than stored separately. Editing or deleting a session immediately recalculates them. Guest records last only for the current visit; account records use that user's completed sessions. Before completing a workout, the app refreshes History for comparison. If that refresh fails, the workout can still be saved, but the summary does not claim records and History/Progress provide a retry.
+
+Verification: 82 frontend tests and the production build pass. Record tests cover exact reps, ties, first benchmarks, repeated sets, edits/deletions, retry identity, future-session exclusion, zero/invalid weights and guest isolation. Server-rendered checks cover Progress, session links and completion summary states. Final browser interaction and mobile appearance should be checked locally.

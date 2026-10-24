@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PersonalRecords from './PersonalRecords';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { RefreshCw, TrendingUp } from 'lucide-react';
 import { getExerciseOptions, getExerciseProgress } from '../services/progress';
@@ -28,7 +29,7 @@ function ProgressChart({ sessions, metric, title, description }) {
   </section>;
 }
 
-export default function WorkoutProgress({ workouts, plans, catalog = [], loading, error, onRetry, onViewPlans }) {
+export default function WorkoutProgress({ workouts, plans, catalog = [], loading, error, onRetry, onViewPlans, onViewWorkout }) {
   const [selectedKey, setSelectedKey] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -49,6 +50,7 @@ export default function WorkoutProgress({ workouts, plans, catalog = [], loading
       <label>To<input type="date" value={to} onChange={event => setTo(event.target.value)} aria-invalid={invalidRange} aria-describedby={invalidRange ? 'date-range-error' : undefined}/></label>
       <button className="secondary" disabled={!from && !to} onClick={() => { setFrom(''); setTo(''); }}>All dates</button>
     </div>
+    <PersonalRecords workouts={workouts} exerciseKey={exercise.key} onViewWorkout={onViewWorkout}/>
     {invalidRange ? <p id="date-range-error" role="alert" className="error">The start date must be on or before the end date.</p> : !sessions.length ? <section className="empty"><span className="empty-icon"><TrendingUp size={30}/></span><h2>No sessions for this selection.</h2><p>Log a workout with {exercise.name}, or choose a different exercise or date range.</p><button className="secondary" onClick={onViewPlans}>View workout plans</button></section> : <>
       <section className="stats progress-stats" aria-label="Selected exercise summary">
         <article className="stat"><div>Sessions</div><strong>{sessions.length}</strong><p>In the selected date range</p></article>

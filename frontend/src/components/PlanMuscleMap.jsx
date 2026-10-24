@@ -30,7 +30,7 @@ const back = [
   ['calves', 'Calves', 'M70 319 Q81 312 85 329 L82 357 L74 379 L68 365 L66 343 Z'],
 ];
 
-function Body({ view, regions }) {
+function Body({ view, regions, completed }) {
   const titleId = useId();
   const shapes = view === 'Front' ? front : back;
   function muscle(key, name, path, mirrored = false) {
@@ -39,7 +39,7 @@ function Body({ view, regions }) {
       className={`body-muscle ${status || 'inactive'}`}><title>{`${name}: ${status ? `${status} muscle` : 'not highlighted'}`}</title></path>;
   }
   return <figure className="body-view"><svg viewBox="0 0 200 440" role="img" aria-labelledby={titleId}>
-    <title id={titleId}>{`${view} view of muscles trained by this workout plan`}</title>
+    <title id={titleId}>{`${view} view of muscles trained ${completed ? 'in this completed workout' : 'by this workout plan'}`}</title>
     <g className="body-outline">
       <ellipse cx="100" cy="27" rx="16" ry="21"/>
       <path d="M92 46 L108 46 L110 58 L130 65 Q143 68 148 83 L157 116 L166 146 L176 183 L178 195 L174 204 L169 205 L165 194 L163 186 L152 164 L141 137 L134 115 L130 143 L132 164 L139 192 L137 220 L136 265 L132 300 L132 321 L135 352 L130 381 L132 405 L143 419 Q144 424 138 425 L116 425 Q110 423 112 416 L113 397 L109 369 L109 341 L105 314 L100 269 L95 314 L91 341 L91 369 L87 397 L88 416 Q90 423 84 425 L62 425 Q56 424 57 419 L68 405 L70 381 L65 352 L68 321 L68 300 L64 265 L63 220 L61 192 L68 164 L70 143 L66 115 L59 137 L48 164 L37 186 L35 194 L31 205 L26 204 L22 195 L24 183 L34 146 L43 116 L52 83 Q57 68 70 65 L90 58 Z"/>
@@ -53,11 +53,11 @@ function Body({ view, regions }) {
   </svg><figcaption>{view}</figcaption></figure>;
 }
 
-export default function PlanMuscleMap({ plan, catalog }) {
+export default function PlanMuscleMap({ plan, catalog, completed = false }) {
   const summary = planMuscleSummary(plan, catalog);
-  return <section className="plan-muscle-map" aria-label="Muscles trained by this plan">
-    <div className="section-heading"><h3>Muscles worked</h3><span className="muted">Whole plan</span></div>
-    <div className="body-views"><Body view="Front" regions={summary.regions}/><Body view="Back" regions={summary.regions}/></div>
+  return <section className="plan-muscle-map" aria-label={completed ? 'Muscles trained in this completed workout' : 'Muscles trained by this plan'}>
+    <div className="section-heading"><h3>Muscles worked</h3><span className="muted">{completed ? 'Completed session' : 'Whole plan'}</span></div>
+    <div className="body-views"><Body view="Front" regions={summary.regions} completed={completed}/><Body view="Back" regions={summary.regions} completed={completed}/></div>
     <div className="muscle-map-legend"><span><i className="primary-dot"/>Primary</span><span><i className="secondary-dot"/>Secondary</span><span><i className="inactive-dot"/>Not highlighted</span></div>
     <div className="plan-muscle-groups"><div><h4>Primary muscles</h4><p>{summary.primary.join(', ') || 'Not specified'}</p></div><div><h4>Secondary muscles</h4><p>{summary.secondary.join(', ') || 'None listed'}</p></div></div>
     {summary.unspecified > 0 && <p className="progress-note">{summary.unspecified} {summary.unspecified === 1 ? 'exercise has' : 'exercises have'} no muscle labels yet and {summary.unspecified === 1 ? 'is' : 'are'} not included in the highlights.</p>}

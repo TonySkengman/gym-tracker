@@ -5,7 +5,7 @@ import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2, X } from 'lucide-react'
 
 const editorExercise = item => ({ ...item, _editorId: crypto.randomUUID() });
 const exercise = () => editorExercise({ name: '', targetSets: 3, targetReps: 10, restSeconds: '' });
-export default function PlanEditor({ plan, onSave, onClose, catalog, catalogLoading, catalogError, onCatalogRetry, onCreateExercise }) {
+export default function PlanEditor({ plan, duplicate = false, onSave, onClose, catalog, catalogLoading, catalogError, onCatalogRetry, onCreateExercise }) {
   const dialog = useRef(null);
   const draggedId = useRef(null);
   const [dragging, setDragging] = useState(null);
@@ -45,7 +45,8 @@ export default function PlanEditor({ plan, onSave, onClose, catalog, catalogLoad
   }
   return <dialog ref={dialog} onCancel={event => { event.preventDefault(); if (!saving) onClose(); }} aria-labelledby="editor-title">
     <form onSubmit={submit}>
-      <div className="flex items-center justify-between"><div><p className="eyebrow">BUILD YOUR ROUTINE</p><h2 id="editor-title">{plan ? 'Edit workout plan' : 'New workout plan'}</h2></div><button type="button" className="icon-button" aria-label="Close editor" disabled={saving} onClick={onClose}><X size={20}/></button></div>
+      <div className="flex items-center justify-between"><div><p className="eyebrow">BUILD YOUR ROUTINE</p><h2 id="editor-title">{duplicate ? 'Duplicate workout plan' : plan ? 'Edit workout plan' : 'New workout plan'}</h2></div><button type="button" className="icon-button" aria-label="Close editor" disabled={saving} onClick={onClose}><X size={20}/></button></div>
+      {duplicate && <p className="muted mt-3">Adjust this copy, then save it as a new plan. The original routine stays unchanged.</p>}
       <label>Plan name<input autoFocus required maxLength={100} pattern=".*\S.*" placeholder="e.g. Upper body strength" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}/></label>
       <label>Description <span className="muted">(optional)</span><textarea maxLength={500} placeholder="What are you working toward?" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}/></label>
       <div className="flex items-center justify-between my-5"><h3>Exercises</h3><span className="muted">{form.exercises.length} / 50</span></div>

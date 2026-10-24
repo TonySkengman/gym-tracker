@@ -1036,6 +1036,46 @@ textarea {
 
 /* Progress charts and filters */
 
+/* Save stores an unfinished draft; Finish is a separate action on the left. */
+.workout-footer-active {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+
+.workout-footer-active .finish-workout {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+.workout-footer-active .discard-workout {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.workout-footer-active .save-workout-progress {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+@media (max-width: 480px) {
+  .workout-footer-active {
+    grid-template-columns: 1fr auto;
+  }
+  .workout-footer-active .save-workout-progress {
+    grid-column: 2;
+  }
+  .workout-footer-active .discard-workout {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    padding: 6px 0;
+  }
+}
+
 .progress-filters {
   display: grid;
   grid-template-columns: minmax(170px,2fr) minmax(130px,1fr) minmax(130px,1fr) auto;
@@ -2034,6 +2074,28 @@ dialog select:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.completed-workout-date {
+  margin-top: 14px;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.completed-exercise-list {
+  display: grid;
+  gap: 24px;
+}
+
+.completed-exercise h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.completed-exercise .table-scroll {
+  margin-top: 12px;
+}
+
 .plan-detail-table {
   border-collapse: collapse;
   width: 100%;
@@ -2041,7 +2103,11 @@ dialog select:focus-visible {
   text-align: left;
 }
 
-.plan-detail-table th, .plan-detail-table td {
+.plan-detail-table th, .plan-detail-table.completed-set-table th:first-child {
+  width: 20%;
+}
+
+.plan-detail-table td {
   padding: 14px 10px;
   border-top: 1px solid var(--app-border);
   vertical-align: top;
@@ -2638,4 +2704,31 @@ dialog select:focus-visible {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Personal records and completed-session summary */
+.personal-records {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.personal-records h2 { display: flex; align-items: center; gap: 9px; }
+.records-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.records-table th, .records-table td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--app-border); }
+.records-table thead th { color: var(--app-muted); font-size: 12px; font-weight: 400; }
+.records-table tbody th { font-weight: 500; }
+.record-workout-link { text-align: left; color: var(--app-accent); text-decoration: underline; text-underline-offset: 3px; }
+.record-workout-link span { display: block; font-size: 12px; text-decoration: none; }
+.workout-completion { width: min(620px, calc(100% - 32px)); max-height: 90dvh; overflow-y: auto; }
+.completion-records { display: grid; gap: 14px; margin-top: 24px; }
+.completion-record { background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 12px; padding: 18px; }
+.completion-record h3 { margin: 12px 0 4px; }
+.completion-record .record-value { font-size: 28px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.record-value span { font-size: 15px; font-weight: 400; color: var(--app-muted); }
+.workout-completion .editor-footer { flex-wrap: wrap; gap: 10px; }
+@media (max-width: 600px) {
+  .personal-records { padding: 16px; }
+  .records-table th, .records-table td { padding: 10px 5px; }
+  .workout-completion .editor-footer button { flex: 1 1 120px; }
 }

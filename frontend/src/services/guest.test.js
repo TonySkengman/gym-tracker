@@ -58,8 +58,8 @@ test('new visits start empty and cannot see another workspace or mutate its snap
   const custom = await first.createExercise('  Guest   press ');
   assert.equal(custom.name, 'Guest press');
   await assert.rejects(first.createExercise('GUEST PRESS'), /already exists/);
-  assert.equal((await first.getExercises()).length, 51);
-  assert.equal((await second.getExercises()).length, 50);
+  assert.equal((await first.getExercises()).length, 131);
+  assert.equal((await second.getExercises()).length, 130);
   assert.deepEqual(await second.getPlans(), []);
   assert.deepEqual(await second.getWorkouts(), []);
   assert.deepEqual(await second.getSchedule(), []);
