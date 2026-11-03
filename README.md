@@ -1,6 +1,6 @@
 # Form — Gym Tracker
 
-A full-stack gym workout tracker built as a portfolio project. Create routines, log actual weights and reps for each set, and browse completed sessions in History. The responsive dark dashboard shows live plan and completed workout totals. The Progress page charts heaviest weight and training volume for each exercise. A Schedule calendar assigns saved plans to dates and shows the next upcoming workout on the dashboard.
+Form helps you plan your gym workouts, keep track of what you lift, and see your progress over time. Create your own workout routines, record weights and reps, and look back at past sessions. Schedule your workouts in the calendar so you always know what's next.
 
 ## Stack
 
